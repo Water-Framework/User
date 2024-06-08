@@ -1,0 +1,26 @@
+meta {
+  name: Save User
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8080/water/users
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+body:json {
+  {
+      "username": "username1",
+      "name":"name",
+      "lastname":"lastName",
+      "password":"Password1",
+      "email":"user@mail.com"
+  }
+}
