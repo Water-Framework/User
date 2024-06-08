@@ -207,7 +207,7 @@ public class UserServiceImpl extends BaseEntityServiceImpl<WaterUser> implements
     @Override
     @AllowGenericPermissions(actions = CrudActions.FIND_ALL)
     public PaginableResult<WaterUser> findAllDeleted(int delta, int page, Query filter, QueryOrder queryOrder) {
-        return systemService.findAllDeleted(delta,page,filter,queryOrder);
+        return systemService.findAllDeleted(delta, page, filter, queryOrder);
     }
 
     @Override
@@ -233,7 +233,7 @@ public class UserServiceImpl extends BaseEntityServiceImpl<WaterUser> implements
         params.put("username", user.getUsername());
         params.put("activateAccountUrl", userOptions.getUserActivationUrl() + "/" + user.getEmail() + "/" + user.getActivateCode());
         params.put("activationCode", user.getActivateCode());
-        sendEmailNotification(user, "Account Activation!", recipients, userOptions.getUserRegistrationEmailTemplateName(), accountAttivationDefaultTemplate, params);
+        sendEmailNotification("Account Activation!", recipients, userOptions.getUserRegistrationEmailTemplateName(), accountAttivationDefaultTemplate, params);
     }
 
     private void sendPasswordResetEmailNotification(WaterUser user) {
@@ -244,7 +244,7 @@ public class UserServiceImpl extends BaseEntityServiceImpl<WaterUser> implements
         params.put("username", user.getUsername());
         params.put("changePwdUrl", userOptions.getPasswordResetUrl() + "/" + user.getEmail() + "/" + user.getPasswordResetCode());
         params.put("resetPwdCode", user.getPasswordResetCode());
-        sendEmailNotification(user, "Password Reset", recipients, userOptions.getUserRegistrationEmailTemplateName(), passwordResetDefaultTemplate, params);
+        sendEmailNotification("Password Reset", recipients, userOptions.getUserRegistrationEmailTemplateName(), passwordResetDefaultTemplate, params);
     }
 
     private void sendDeletionRequestEmailNotification(WaterUser user) {
@@ -254,7 +254,7 @@ public class UserServiceImpl extends BaseEntityServiceImpl<WaterUser> implements
         HashMap<String, Object> params = new HashMap<>();
         params.put("username", user.getUsername());
         params.put("accountDeletionCode", user.getDeletionCode());
-        sendEmailNotification( "Password Reset", recipients, userOptions.getUserRegistrationEmailTemplateName(), accountDeletionRequestDefaultTemplate, params);
+        sendEmailNotification("Password Reset", recipients, userOptions.getUserRegistrationEmailTemplateName(), accountDeletionRequestDefaultTemplate, params);
     }
 
     private void sendEmailNotification(String subject, List<String> recipients, String templateName, String templateContent, HashMap<String, Object> params) {
