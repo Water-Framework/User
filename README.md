@@ -11,10 +11,6 @@ The reason is that the login logic should be centralized in a separate module.
 - Password reset process (it generates a reset pwd code sent by email)
 - Unregister process (it generates a confirmation code sent by email)
 
-## UML Design
-
-![User-Module](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/Water-Framework/User/develop/doc/uml/user.puml)
-
 ## Available Configurations
 
 There are different possible configurations, the following are the main ones:
