@@ -13,7 +13,7 @@ The reason is that the login logic should be centralized in a separate module.
 
 ## UML Design
 
-![User-Module](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://github.com/Water-Framework/User/blob/develop/doc/uml/user.puml)
+![User-Module](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/Water-Framework/User/develop/doc/uml/user.puml)
 
 ## Available Configurations
 
