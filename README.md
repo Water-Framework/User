@@ -5,6 +5,16 @@
 The “User” module exposes a whole set of features for user management. It is not a module that integrates login but exposes methods for retrieving the user given username and password.
 The reason is that the login logic should be centralized in a separate module.
 
+- User registration
+- User management (activation/deactivation)
+- Email confirmation on registration
+- Password reset process (it generates a reset pwd code sent by email)
+- Unregister process (it generates a confirmation code sent by email)
+
+## UML Design
+
+![User-Module](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/jonashackt/plantuml-markdown/master/example-uml.iuml)
+
 ## Available Configurations
 
 There are different possible configurations, the following are the main ones:
