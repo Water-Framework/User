@@ -51,22 +51,27 @@ public interface UserSpringRestApi extends UserRestApi {
     WaterUser register(@RequestBody WaterUser user);
 
     @PutMapping("/activate")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Override
     void activate(@RequestParam String email, @RequestParam String activationCode);
 
     @PutMapping("/{userId}/activate")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Override
     void activate(@PathVariable long userId);
 
     @PutMapping("/{id}/deactivate")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Override
     void deactivate(@PathVariable("id") long userId);
 
     @DeleteMapping("/unregister")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Override
     void unregister(@RequestParam String email, @RequestParam String deletionCode);
 
     @PutMapping("/resetPasswordRequest")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Override
     void passwordResetRequest(@RequestParam String email);
 }
