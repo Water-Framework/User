@@ -19,6 +19,8 @@ package it.water.user;
 import it.water.core.api.notification.email.EmailNotificationService;
 import it.water.core.interceptors.annotations.FrameworkComponent;
 
+import java.io.File;
+import java.util.HashMap;
 import java.util.List;
 
 @FrameworkComponent(priority = 0)
@@ -29,12 +31,12 @@ public class FakeMailTestNotification implements EmailNotificationService {
     }
 
     @Override
-    public void sendMail(String s, List<String> list, List<String> list1, List<String> list2, String s1, String s2, List<byte[]> list3) {
-        //not sending anything
+    public void sendMail(String s, List<String> list, List<String> list1, List<String> list2, String s1, String s2, List<File> list3) {
+        //do nothing
     }
 
     @Override
-    public void sendMail(String s, String s1, List<String> list, List<String> list1, List<String> list2, String s2, List<byte[]> list3) {
-        //not sending anything
+    public void sendMail(String s, HashMap<String, Object> hashMap, String s1, List<String> list, List<String> list1, List<String> list2, String s2, List<File> list3) {
+        //do nothing
     }
 }

@@ -13,11 +13,8 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:' + project.lombokVersion
 	//javax persistence
 	implementation 'javax.persistence:javax.persistence-api:'+project.javaxPersistenceVersion
-	//hibernate
-	implementation 'org.hibernate:hibernate-core:'+project.hibernateVersion
 	//Water javax persistence
 	implementation 'it.water.repository.jpa:JpaRepository-javax:'+project.waterVersion
-	implementation group: 'javax.transaction', name: 'javax.transaction-api', version: project.javaxTransactionApiVersion
 	//Water Persistence
 	implementation group:'it.water.repository', name:'Repository-entity', version:project.waterVersion
 	implementation group:'it.water.repository', name:'Repository-persistence', version:project.waterVersion

@@ -270,7 +270,7 @@ public class UserServiceImpl extends BaseEntityServiceImpl<WaterUser> implements
                 } else
                     getLog().warn("Impossibile to find an EMAIL CONTENT BUILDER, no mail will be sent, please install module which provide this capability such as: it.water.notificaion.mail");
             } else {
-                this.emailNotificationService.sendMail(templateName, emailNotificationService.getSystemSenderName(), recipients, null, null, subject, null);
+                this.emailNotificationService.sendMail(templateName,params, emailNotificationService.getSystemSenderName(), recipients, null, null, subject, null);
             }
         } catch (Exception e) {
             getLog().error(e.getMessage(), e);
