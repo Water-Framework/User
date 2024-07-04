@@ -27,4 +27,9 @@ public class FakeEmailContentBuilder implements EmailContentBuilder {
     public String createBodyFromTemplate(String s, HashMap<String, Object> hashMap) {
         return "empty body";
     }
+
+    @Override
+    public void saveOrUpdateTemplate(String s, String s1) {
+        //do nothing
+    }
 }

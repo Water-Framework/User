@@ -11,10 +11,8 @@ dependencies {
 	//lombok
     implementation group: 'org.projectlombok', name: 'lombok', version: project.lombokVersion
     annotationProcessor 'org.projectlombok:lombok:' + project.lombokVersion
-	//javax persistence
-	implementation 'javax.persistence:javax.persistence-api:'+project.javaxPersistenceVersion
 	//Water javax persistence
-	implementation 'it.water.repository.jpa:JpaRepository-javax:'+project.waterVersion
+	implementation 'it.water.repository.jpa:JpaRepository-api:'+project.waterVersion
 	//Water Persistence
 	implementation group:'it.water.repository', name:'Repository-entity', version:project.waterVersion
 	implementation group:'it.water.repository', name:'Repository-persistence', version:project.waterVersion

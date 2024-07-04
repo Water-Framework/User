@@ -14,7 +14,7 @@ dependencies {
 	// JPA Repository
 	implementation 'it.water.repository.jpa:JpaRepository-spring:'+project.waterVersion
 	//hibernate validator
-	implementation group: "org.hibernate", name: "hibernate-validator", version: project.hibernateValidatorJavaxVersion
+	implementation group: "org.hibernate", name: "hibernate-validator", version: project.hibernateValidatorVersion
 	//Rest Modules
 	implementation group: 'it.water.service.rest', name: 'Rest-spring-api', version: project.waterVersion
 

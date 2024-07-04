@@ -8,9 +8,9 @@ dependencies {
 	implementation 'org.atteo.classindex:classindex:' + project.atteoClassIndexVersion
 	annotationProcessor('org.atteo.classindex:classindex:' + project.atteoClassIndexVersion)
 	//javax persistence
-	implementation 'javax.persistence:javax.persistence-api:'+project.javaxPersistenceVersion
+	implementation 'jakarta.persistence:jakarta.persistence-api:'+project.jakartaPersistenceVersion
 	//Water javax persistence
-	implementation 'it.water.repository.jpa:JpaRepository-javax:'+project.waterVersion
+	implementation 'it.water.repository.jpa:JpaRepository-api:'+project.waterVersion
 	implementation 'it.water.repository:Repository-entity:'+project.waterVersion
 	//Jackson
 	implementation group: 'com.fasterxml.jackson.jaxrs', name: 'jackson-jaxrs-json-provider', version: project.jacksonVersion

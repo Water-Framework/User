@@ -11,9 +11,9 @@ dependencies {
 	implementation 'it.water.repository:Repository-entity:'+project.waterVersion
 	implementation project(":User-model")
 	//javax persistence
-	implementation 'javax.persistence:javax.persistence-api:'+project.javaxPersistenceVersion
+	implementation 'jakarta.persistence:jakarta.persistence-api:'+project.jakartaPersistenceVersion
 	//Water javax persistence
-	implementation 'it.water.repository.jpa:JpaRepository-javax:'+project.waterVersion
+	implementation 'it.water.repository.jpa:JpaRepository-api:'+project.waterVersion
 	//Rest
 	implementation group: "it.water.service.rest", name: "Rest-api", version: project.waterVersion
 	// https://mvnrepository.com/artifact/io.swagger/swagger-jaxrs
