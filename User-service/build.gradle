@@ -21,8 +21,6 @@ dependencies {
 	implementation 'it.water.core:Core-validation:'+project.waterVersion
     implementation group: 'jakarta.validation', name: 'jakarta.validation-api', version: project.jakartaValidationVersion
     implementation group: "org.hibernate", name: "hibernate-validator", version: project.hibernateValidatorVersion
-	//Jackson
-    implementation group: 'com.fasterxml.jackson.jaxrs', name: 'jackson-jaxrs-json-provider', version: project.jacksonVersion
     //Encryption
     implementation group: 'org.bouncycastle', name: 'bcmail-jdk15on', version: project.bouncyCastleVersion
     implementation group: 'com.nimbusds', name: 'nimbus-jose-jwt', version: project.nimbusJoseJwtVersion
@@ -71,7 +69,7 @@ dependencies {
 	testImplementation group: 'org.springframework', name: 'spring-web', version: '5.3.22'
 	testImplementation group: 'org.springframework', name: 'spring-context', version: '5.3.22'
 	//with 9.4.4 tests won't work because of the integration between cxf and jetty outside karaf context
-	testImplementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.4.49.v20220914'
+	testImplementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: project.jettyVersion
 	// https://mvnrepository.com/artifact/com.intuit.karate/karate-junit5
 	testImplementation group: 'com.intuit.karate', name: 'karate-junit5', version: project.karateVersion
 
