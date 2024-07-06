@@ -1,0 +1,82 @@
+@startuml
+
+set namespaceSeparator none
+
+rectangle "User-api" as UserApiModule #DAE8FC{
+  package it.water.user.api  as ApiPackage #DAE8FC{
+     interface UserApi {
+     }
+     interface UserRepository {
+     
+     }
+     interface UserSystemApi {
+     
+     }
+     
+     package options as ApiOptionsPackage #DAE8FC{
+        interface UserOptions {
+        }
+     }
+     
+     package rest as ApiRestPackage #DAE8FC{
+        interface UserRestApi { 
+        }
+     }   
+  }
+}
+
+rectangle "User-model" as UserModelModule #FFE6CC {
+  package it.water.user  as ModelPackage #FFE6CC{
+    package actions as ActionsPackage #FFE6CC {
+        class UserActions {
+        
+        }
+     }
+     package model as ModelPackage #FFE6CC{
+        class WaterUser {
+        
+        }
+     }
+  }
+}
+
+rectangle "User-service" as UserServiceModule #D5E8D4 {
+  package it.water.user  as ServicePackage #D5E8D4{
+    package repository as RepositoryPackage #D5E8D4 {
+        class UserRepositoryImpl
+     }
+    
+    package service as ServiceImplPackage #D5E8D4{
+        package rest as ServiceRestPackage #D5E8D4{
+           class UserRestControllerImpl
+        }
+        class UserOptionsImpl
+        class UserServiceImpl
+        class UserSystemServiceImpl
+     }
+  }
+}
+
+rectangle "User-service-spring" as UserServiceSpring #FFF2CC {
+
+  package it.water.user  as ServiceSpringPackage #FFF2CC{
+    package api.rest.spring as SpringApiPackage #FFF2CC {
+        interface UserSpringRestApi
+     }
+    
+    package service.rest.spring as SpringServiceSImplPackage #FFF2CC{
+        package rest as SpringServiceRestPackage #FFF2CC{
+           class UserSpringRestControllerImpl {
+           }
+        }
+        class UserApplication{
+        }
+     }
+  }
+}
+
+UserModelModule -[hidden]u---> UserApiModule
+UserApiModule -[hidden]d---> UserServiceModule
+UserServiceSpring -[hidden]r---> UserServiceModule
+
+@enduml
