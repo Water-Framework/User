@@ -1,0 +1,22 @@
+Bundle-Name: Water User Service Integration Bundle
+Bundle-SymbolicName: User
+Bundle-Activator: it.water.implementation.osgi.bundle.WaterBundleActivator
+Import-Package: \
+    org.osgi.framework.*,\
+    org.osgi.service.*,\
+    org.osgi.util.*,\
+    org.slf4j.*,\
+    org.hibernate.validator.*,\
+    javassist.util.proxy,\
+    jakarta.validation,\
+    jakarta.validation.*,\
+    jakarta.persistence,\
+    jakarta.transaction,\
+    jakarta.enterprise.*,\
+    it.water.core.*,\
+    it.water.service.rest.*,\
+    it.water.implementation.osgi.*
+Export-Package: \
+    it.water.user.service.integration
+DynamicImport-Package: *
+-fixupmessages "Classes found in the wrong directory"; restrict:=error; is:=warning
