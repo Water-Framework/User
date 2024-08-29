@@ -9,13 +9,13 @@ import it.water.core.api.service.rest.WaterJsonView;
 import it.water.core.model.exceptions.ValidationException;
 import it.water.core.model.validation.ValidationError;
 import it.water.core.permission.action.CrudActions;
+import it.water.core.permission.action.UserActions;
 import it.water.core.permission.annotations.AccessControl;
 import it.water.core.permission.annotations.DefaultRoleAccess;
 import it.water.core.validation.annotations.NoMalitiusCode;
 import it.water.core.validation.annotations.NotNullOnPersist;
 import it.water.core.validation.annotations.ValidPassword;
 import it.water.repository.jpa.model.AbstractJpaEntity;
-import it.water.user.actions.UserActions;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -58,7 +58,7 @@ public class WaterUser extends AbstractJpaEntity implements ProtectedEntity, Use
     /**
      * String name for HUser
      */
-    @JsonView(WaterJsonView.Public.class)
+    @JsonView(WaterJsonView.Extended.class)
     @NoMalitiusCode
     @NotNullOnPersist
     @NotEmpty
@@ -68,7 +68,7 @@ public class WaterUser extends AbstractJpaEntity implements ProtectedEntity, Use
     /**
      * String lastname for HUser
      */
-    @JsonView(WaterJsonView.Public.class)
+    @JsonView(WaterJsonView.Extended.class)
     @NoMalitiusCode
     @NotNullOnPersist
     @NonNull
@@ -78,7 +78,7 @@ public class WaterUser extends AbstractJpaEntity implements ProtectedEntity, Use
     /**
      * String username for HUser
      */
-    @JsonView(WaterJsonView.Public.class)
+    @JsonView(WaterJsonView.Extended.class)
     @NoMalitiusCode
     @NotNullOnPersist
     @NotEmpty
@@ -108,13 +108,13 @@ public class WaterUser extends AbstractJpaEntity implements ProtectedEntity, Use
     @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
     @NonNull
     @Setter
-    @JsonView(WaterJsonView.Public.class)
+    @JsonView(WaterJsonView.Compact.class)
     private boolean admin;
 
     /**
      * String email for HUser
      */
-    @JsonView(WaterJsonView.Public.class)
+    @JsonView(WaterJsonView.Extended.class)
     @Email
     @NonNull
     @NotEmpty
@@ -143,7 +143,7 @@ public class WaterUser extends AbstractJpaEntity implements ProtectedEntity, Use
      */
     @NoMalitiusCode
     @Setter
-    @JsonView(WaterJsonView.Public.class)
+    @JsonView(WaterJsonView.Extended.class)
     private String imagePath;
 
     /* ### Registration Fields */

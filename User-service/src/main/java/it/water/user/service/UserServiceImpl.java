@@ -13,12 +13,12 @@ import it.water.core.interceptors.annotations.FrameworkComponent;
 import it.water.core.interceptors.annotations.Inject;
 import it.water.core.model.exceptions.WaterRuntimeException;
 import it.water.core.permission.action.CrudActions;
+import it.water.core.permission.action.UserActions;
 import it.water.core.permission.annotations.AllowGenericPermissions;
 import it.water.core.permission.annotations.AllowLoggedUser;
 import it.water.core.permission.exceptions.UnauthorizedException;
 import it.water.repository.entity.model.exceptions.EntityNotFound;
 import it.water.repository.service.BaseEntityServiceImpl;
-import it.water.user.actions.UserActions;
 import it.water.user.api.UserApi;
 import it.water.user.api.UserSystemApi;
 import it.water.user.api.options.UserOptions;
@@ -270,7 +270,7 @@ public class UserServiceImpl extends BaseEntityServiceImpl<WaterUser> implements
                 } else
                     getLog().warn("Impossibile to find an EMAIL CONTENT BUILDER, no mail will be sent, please install module which provide this capability such as: it.water.notificaion.mail");
             } else {
-                this.emailNotificationService.sendMail(templateName,params, emailNotificationService.getSystemSenderName(), recipients, null, null, subject, null);
+                this.emailNotificationService.sendMail(templateName, params, emailNotificationService.getSystemSenderName(), recipients, null, null, subject, null);
             }
         } catch (Exception e) {
             getLog().error(e.getMessage(), e);
