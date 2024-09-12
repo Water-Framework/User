@@ -16,8 +16,10 @@
 
 package it.water.user.api.rest.spring;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import it.water.core.api.model.PaginableResult;
 import it.water.core.api.service.rest.FrameworkRestApi;
+import it.water.core.api.service.rest.WaterJsonView;
 import it.water.service.rest.api.security.LoggedIn;
 import it.water.user.api.rest.UserRestApi;
 import it.water.user.model.WaterUser;
@@ -33,46 +35,57 @@ import org.springframework.web.bind.annotation.*;
 @FrameworkRestApi
 public interface UserSpringRestApi extends UserRestApi {
     @PostMapping
+    @JsonView(WaterJsonView.Public.class)
     WaterUser save(@RequestBody  WaterUser user);
 
     @PutMapping
+    @JsonView(WaterJsonView.Public.class)
     WaterUser update(@RequestBody WaterUser user);
 
     @GetMapping("/{id}")
+    @JsonView(WaterJsonView.Public.class)
     WaterUser find(@PathVariable("id") long id);
 
     @GetMapping
+    @JsonView(WaterJsonView.Public.class)
     PaginableResult<WaterUser> findAll();
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @JsonView(WaterJsonView.Public.class)
     void remove(@PathVariable("id") long id);
 
     @PostMapping("/register")
+    @JsonView(WaterJsonView.Public.class)
     WaterUser register(@RequestBody WaterUser user);
 
     @PutMapping("/activate")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Override
+    @JsonView(WaterJsonView.Public.class)
     void activate(@RequestParam String email, @RequestParam String activationCode);
 
     @PutMapping("/{userId}/activate")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Override
+    @JsonView(WaterJsonView.Public.class)
     void activate(@PathVariable long userId);
 
     @PutMapping("/{id}/deactivate")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Override
+    @JsonView(WaterJsonView.Public.class)
     void deactivate(@PathVariable("id") long userId);
 
     @DeleteMapping("/unregister")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Override
+    @JsonView(WaterJsonView.Public.class)
     void unregister(@RequestParam String email, @RequestParam String deletionCode);
 
     @PutMapping("/resetPasswordRequest")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Override
+    @JsonView(WaterJsonView.Public.class)
     void passwordResetRequest(@RequestParam String email);
 }
