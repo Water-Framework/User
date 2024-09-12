@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonView;
 import it.water.core.api.model.PaginableResult;
 import it.water.core.api.service.rest.FrameworkRestApi;
 import it.water.core.api.service.rest.WaterJsonView;
-import it.water.service.rest.api.security.LoggedIn;
 import it.water.user.api.rest.UserRestApi;
 import it.water.user.model.WaterUser;
 import org.springframework.http.HttpStatus;
@@ -65,11 +64,11 @@ public interface UserSpringRestApi extends UserRestApi {
     @JsonView(WaterJsonView.Public.class)
     void activate(@RequestParam String email, @RequestParam String activationCode);
 
-    @PutMapping("/{userId}/activate")
+    @PutMapping("/{id}/activate")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Override
     @JsonView(WaterJsonView.Public.class)
-    void activate(@PathVariable long userId);
+    void activate(@PathVariable("id") long userId);
 
     @PutMapping("/{id}/deactivate")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -81,11 +80,11 @@ public interface UserSpringRestApi extends UserRestApi {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Override
     @JsonView(WaterJsonView.Public.class)
-    void unregister(@RequestParam String email, @RequestParam String deletionCode);
+    void unregister(@RequestParam("email") String email, @RequestParam("deletionCode") String deletionCode);
 
     @PutMapping("/resetPasswordRequest")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Override
     @JsonView(WaterJsonView.Public.class)
-    void passwordResetRequest(@RequestParam String email);
+    void passwordResetRequest(@RequestParam("email") String email);
 }

@@ -41,7 +41,7 @@ Feature: Check User Rest Api Response
     * def entityId = response.id
 
     # --------------- ACTIVATING USER -----------------------------
-    # Activation is possibile as admin since in rest tess
+    # Activation is possibile as admin since in rest test
     # Water framework starts automatically with admin permission
     # to let the developer test every method correctly
 
