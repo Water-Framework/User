@@ -28,6 +28,8 @@
             <property name="javax.persistence.jdbc.url" value="jdbc:hsqldb:mem:testdb"/>
             <property name="javax.persistence.jdbc.user" value="sa"/>
             <property name="javax.persistence.jdbc.password" value=""/>
+            <!-- disabling auto validation since system aoi Automatically validates entities -->
+            <property name="javax.persistence.validation.mode" value="NONE" />
             <!-- Configurazione di Hibernate -->
             <property name="hibernate.dialect" value="org.hibernate.dialect.HSQLDialect"/>
             <property name="hibernate.show_sql" value="true"/>
