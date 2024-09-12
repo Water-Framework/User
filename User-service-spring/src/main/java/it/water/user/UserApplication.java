@@ -12,7 +12,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @SpringBootApplication
 @EnableWaterFramework
 @EnableJpaRepositories(basePackages = {"it.water.*", "it.water.user.*"}, repositoryFactoryBeanClass = RepositoryFactory.class)
-@EntityScan({"it.water.*", "com.book.*"})
+@EntityScan({"it.water.*"})
 @ComponentScan({"it.water.*", "it.water.user.*"})
 public class UserApplication {
     public static void main(String[] args) {
