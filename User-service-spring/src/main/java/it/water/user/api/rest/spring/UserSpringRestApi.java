@@ -18,6 +18,7 @@ package it.water.user.api.rest.spring;
 
 import it.water.core.api.model.PaginableResult;
 import it.water.core.api.service.rest.FrameworkRestApi;
+import it.water.service.rest.api.security.LoggedIn;
 import it.water.user.api.rest.UserRestApi;
 import it.water.user.model.WaterUser;
 import org.springframework.http.HttpStatus;
