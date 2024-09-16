@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: http://localhost:8080/water/users
+  url: http://localhost:8080/water/permissions
   body: json
   auth: none
 }
@@ -17,10 +17,12 @@ headers {
 
 body:json {
   {
-      "username": "username1",
-      "name":"name",
-      "lastname":"lastName",
-      "password":"Password1",
-      "email":"user@mail.com"
+    "entityVersion":1,
+    "name": "name",
+    "actionIds": 1,
+    "entityResourceName":"prova",
+    "resourceId":21,
+    "roleId":2,
+    "userId":0
   }
 }

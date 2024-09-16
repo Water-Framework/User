@@ -1,0 +1,23 @@
+meta {
+  name: Update WaterUser
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{address}}/{{contextRoot}}/users
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "id":1
+    "username": "username1",
+    "name":"name",
+    "lastname":"lastName",
+    "password":"Password1.",
+    "passwordConfirm":"Password1.",
+    "email":"user@mail.com"
+  }
+}

@@ -1,0 +1,22 @@
+meta {
+  name: Find WaterUser
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{address}}/{{contextRoot}}/users/1
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "username": "username1",
+    "name":"name",
+    "lastname":"lastName",
+    "password":"Password1.",
+    "passwordConfirm":"Password1.",
+    "email":"user@mail.com"
+  }
+}
