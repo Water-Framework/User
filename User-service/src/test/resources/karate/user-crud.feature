@@ -122,7 +122,7 @@ Feature: Check User Rest Api Response
             "name":'Admin',
             "lastname":"Admin",
             "email":"hadmin@water.it",
-            "username": "wadmin",
+            "username": "admin",
             "admin": true,
             "imagePath":null
           },

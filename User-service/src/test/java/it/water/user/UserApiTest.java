@@ -3,12 +3,13 @@ package it.water.user;
 import it.water.core.api.bundle.ApplicationProperties;
 import it.water.core.api.bundle.Runtime;
 import it.water.core.api.model.PaginableResult;
-import it.water.core.api.permission.Role;
-import it.water.core.api.permission.RoleManager;
+import it.water.core.api.model.Role;
 import it.water.core.api.registry.ComponentRegistry;
 import it.water.core.api.repository.query.Query;
+import it.water.core.api.role.RoleManager;
 import it.water.core.api.security.EncryptionUtil;
 import it.water.core.api.service.Service;
+import it.water.core.api.user.UserManager;
 import it.water.core.interceptors.annotations.Inject;
 import it.water.core.model.exceptions.ValidationException;
 import it.water.core.model.exceptions.WaterRuntimeException;
@@ -61,6 +62,9 @@ public class UserApiTest implements Service {
     private RoleManager roleManager;
     @Inject
     @Setter
+    private UserManager userManager;
+    @Inject
+    @Setter
     private Runtime runtime;
     private it.water.core.api.model.User adminUser;
     private it.water.core.api.model.User managerUser;
@@ -80,10 +84,10 @@ public class UserApiTest implements Service {
         Assertions.assertNotNull(viewer);
         Assertions.assertNotNull(editor);
         //impersonate admin so we can test the happy path
-        adminUser = permissionManager.addUser("admin", "name", "lastname", "admin@a.com", true);
-        managerUser = permissionManager.addUser("manager", "name", "lastname", "manager@a.com", false);
-        viewerUser = permissionManager.addUser("viewer", "name", "lastname", "viewer@a.com", false);
-        editorUser = permissionManager.addUser("editor", "name", "lastname", "editor@a.com", false);
+        adminUser = userManager.findUser("admin");
+        managerUser = userManager.addUser("manager", "name", "lastname", "manager@a.com","Password1_.","PasswordSalt", false);
+        viewerUser = userManager.addUser("viewer", "name", "lastname", "viewer@a.com","Password1_.","PasswordSalt", false);
+        editorUser = userManager.addUser("editor", "name", "lastname", "editor@a.com", "Password1_.","PasswordSalt",false);
         //starting with admin permissions
         roleManager.addRole(managerUser.getId(), manager);
         roleManager.addRole(viewerUser.getId(), viewer);
@@ -152,7 +156,7 @@ public class UserApiTest implements Service {
     public void findAllShouldWork() {
         PaginableResult<WaterUser> all = this.userApi.findAll(null, -1, -1, null);
         //there's one more user created automatically , the admin
-        Assertions.assertEquals(2, all.getResults().size());
+        Assertions.assertEquals(5, all.getResults().size());
     }
 
     /**
@@ -172,7 +176,7 @@ public class UserApiTest implements Service {
         Assertions.assertEquals(2, paginated.getNextPage());
         paginated = this.userApi.findAll(null, 7, 2, null);
         //there's one more user since there's admin, who is automatically created
-        Assertions.assertEquals(4, paginated.getResults().size());
+        Assertions.assertEquals(7, paginated.getResults().size());
         Assertions.assertEquals(2, paginated.getCurrentPage());
         Assertions.assertEquals(1, paginated.getNextPage());
     }
@@ -180,11 +184,17 @@ public class UserApiTest implements Service {
     @Test
     @Order(7)
     public void removeAllShouldWork() {
-        PaginableResult<WaterUser> paginated = this.userApi.findAll(null, -1, -1, null);
+        //removing everything but admin
+        Query notRemoveAdmin = this.userRepository.getQueryBuilderInstance().field("admin").equalTo(true).not();
+        Query notRemoveViewer = this.userRepository.getQueryBuilderInstance().field("username").equalTo("viewer").not();
+        Query notRemoveManager = this.userRepository.getQueryBuilderInstance().field("username").equalTo("manager").not();
+        Query notRemoveEditor = this.userRepository.getQueryBuilderInstance().field("username").equalTo("editor").not();
+        Query q = notRemoveAdmin.and(notRemoveViewer).and(notRemoveManager).and(notRemoveEditor);
+        PaginableResult<WaterUser> paginated = this.userApi.findAll(q, -1, -1, null);
         paginated.getResults().forEach(user -> {
             this.userApi.remove(user.getId());
         });
-        Assertions.assertTrue(this.userApi.countAll(null) == 0);
+        Assertions.assertTrue(this.userApi.countAll(null) == 4);
     }
 
     /**

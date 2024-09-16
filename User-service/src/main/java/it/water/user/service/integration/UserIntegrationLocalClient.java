@@ -28,7 +28,7 @@ import lombok.Setter;
  * This component is used when User module in the same container of the caller class.
  * When User module is hosted outside the caller should import User-service-integration module along with User-api-module to activate rest api calls.
  */
-@FrameworkComponent
+@FrameworkComponent(priority = 1,services = UserIntegrationClient.class)
 public class UserIntegrationLocalClient implements UserIntegrationClient {
     @Inject
     @Setter
