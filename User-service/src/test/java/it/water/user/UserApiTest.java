@@ -18,6 +18,7 @@ import it.water.core.permission.exceptions.UnauthorizedException;
 import it.water.core.testing.utils.api.TestPermissionManager;
 import it.water.core.testing.utils.bundle.TestRuntimeInitializer;
 import it.water.core.testing.utils.junit.WaterTestExtension;
+import it.water.core.testing.utils.runtime.TestRuntimeUtils;
 import it.water.repository.entity.model.exceptions.DuplicateEntityException;
 import it.water.repository.entity.model.exceptions.EntityNotFound;
 import it.water.user.api.UserApi;
@@ -33,7 +34,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import java.util.Properties;
 import java.util.UUID;
 
-import static it.water.core.testing.utils.runtime.TestRuntime.*;
+import static it.water.core.testing.utils.runtime.TestRuntimeUtils.*;
 
 @ExtendWith(WaterTestExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -93,7 +94,7 @@ public class UserApiTest implements Service {
         roleManager.addRole(viewerUser.getId(), viewer);
         roleManager.addRole(editorUser.getId(), editor);
         //starting with admin
-        TestRuntimeInitializer.getInstance().impersonate(adminUser, runtime);
+        TestRuntimeUtils.impersonateAdmin();
     }
 
     @Test
