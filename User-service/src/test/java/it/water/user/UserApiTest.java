@@ -94,7 +94,7 @@ public class UserApiTest implements Service {
         roleManager.addRole(viewerUser.getId(), viewer);
         roleManager.addRole(editorUser.getId(), editor);
         //starting with admin
-        TestRuntimeUtils.impersonateAdmin();
+        TestRuntimeUtils.impersonateAdmin(componentRegistry);
     }
 
     @Test
