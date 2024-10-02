@@ -24,6 +24,8 @@ import it.water.core.interceptors.annotations.FrameworkComponent;
 
 @FrameworkComponent
 public class UserIntegrationRestClient implements EntityRemoteIntegrationClient, UserIntegrationClient {
+    //TODO: add caching mechanism
+
     @Override
     public void setup(ServiceInfo serviceInfo) {
         //setup data from properties
@@ -31,6 +33,18 @@ public class UserIntegrationRestClient implements EntityRemoteIntegrationClient,
 
     @Override
     public User fetchUserByUsername(String username) {
+        //todo rest call
+        return null;
+    }
+
+    @Override
+    public User fetchUserByEmailAddress(String s) {
+        //todo rest call
+        return null;
+    }
+
+    @Override
+    public User fetchUserByUserId(long l) {
         //todo rest call
         return null;
     }
