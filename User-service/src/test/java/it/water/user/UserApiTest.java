@@ -4,6 +4,7 @@ import it.water.core.api.bundle.ApplicationProperties;
 import it.water.core.api.bundle.Runtime;
 import it.water.core.api.model.PaginableResult;
 import it.water.core.api.model.Role;
+import it.water.core.api.permission.PermissionManager;
 import it.water.core.api.registry.ComponentRegistry;
 import it.water.core.api.repository.query.Query;
 import it.water.core.api.role.RoleManager;
@@ -53,10 +54,6 @@ public class UserApiTest implements Service {
     @Inject
     @Setter
     private UserRepository userRepository;
-    @Inject
-    @Setter
-    //default permission manager in test environment;
-    private TestPermissionManager permissionManager;
     @Inject
     @Setter
     //test role manager
