@@ -56,6 +56,13 @@ public class UserOptionsImpl implements UserOptions {
     }
 
     @Override
+    public String defaultAdminPwd() {
+        if (applicationProperties.getProperty(UserConstants.USER_OPT_DEFAULT_ADMIN_PWD) != null)
+            return String.valueOf(applicationProperties.getProperty(UserConstants.USER_OPT_DEFAULT_ADMIN_PWD));
+        return "admin";
+    }
+
+    @Override
     public boolean isPhysicalDeletionEnabled() {
         if (applicationProperties.getProperty(UserConstants.USER_OPT_PHYSICAL_DELETION_ENABLED) != null)
             return Boolean.parseBoolean((String) applicationProperties.getProperty(UserConstants.USER_OPT_PHYSICAL_DELETION_ENABLED));

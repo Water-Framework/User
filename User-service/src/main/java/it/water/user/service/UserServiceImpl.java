@@ -38,6 +38,7 @@ import java.util.UUID;
  */
 @FrameworkComponent
 public class UserServiceImpl extends BaseEntityServiceImpl<WaterUser> implements UserApi {
+    private static final String USERNAME = "username";
 
     @Inject
     @Getter
@@ -230,7 +231,7 @@ public class UserServiceImpl extends BaseEntityServiceImpl<WaterUser> implements
         recipients.add(user.getEmail());
         String accountAttivationDefaultTemplate = "";
         HashMap<String, Object> params = new HashMap<>();
-        params.put("username", user.getUsername());
+        params.put(USERNAME, user.getUsername());
         params.put("activateAccountUrl", userOptions.getUserActivationUrl() + "/" + user.getEmail() + "/" + user.getActivateCode());
         params.put("activationCode", user.getActivateCode());
         sendEmailNotification("Account Activation!", recipients, userOptions.getUserRegistrationEmailTemplateName(), accountAttivationDefaultTemplate, params);
@@ -241,7 +242,7 @@ public class UserServiceImpl extends BaseEntityServiceImpl<WaterUser> implements
         recipients.add(user.getEmail());
         String passwordResetDefaultTemplate = "";
         HashMap<String, Object> params = new HashMap<>();
-        params.put("username", user.getUsername());
+        params.put(USERNAME, user.getUsername());
         params.put("changePwdUrl", userOptions.getPasswordResetUrl() + "/" + user.getEmail() + "/" + user.getPasswordResetCode());
         params.put("resetPwdCode", user.getPasswordResetCode());
         sendEmailNotification("Password Reset", recipients, userOptions.getUserRegistrationEmailTemplateName(), passwordResetDefaultTemplate, params);
@@ -252,7 +253,7 @@ public class UserServiceImpl extends BaseEntityServiceImpl<WaterUser> implements
         String accountDeletionRequestDefaultTemplate = "";
         recipients.add(user.getEmail());
         HashMap<String, Object> params = new HashMap<>();
-        params.put("username", user.getUsername());
+        params.put(USERNAME, user.getUsername());
         params.put("accountDeletionCode", user.getDeletionCode());
         sendEmailNotification("Password Reset", recipients, userOptions.getUserRegistrationEmailTemplateName(), accountDeletionRequestDefaultTemplate, params);
     }

@@ -41,6 +41,12 @@ public interface UserOptions extends Service {
     String getPasswordResetUrl();
 
     /**
+     *
+     * @return default password for admin
+     */
+    String defaultAdminPwd();
+
+    /**
      * If true when a user is removed it is phisically removed from the database.
      * Default is false, so logical deletion is enabled
      * @return

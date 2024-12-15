@@ -4,19 +4,18 @@ import it.water.core.api.bundle.ApplicationProperties;
 import it.water.core.api.bundle.Runtime;
 import it.water.core.api.model.PaginableResult;
 import it.water.core.api.model.Role;
-import it.water.core.api.permission.PermissionManager;
 import it.water.core.api.registry.ComponentRegistry;
 import it.water.core.api.repository.query.Query;
 import it.water.core.api.role.RoleManager;
 import it.water.core.api.security.EncryptionUtil;
 import it.water.core.api.service.Service;
+import it.water.core.api.service.integration.UserIntegrationClient;
 import it.water.core.api.user.UserManager;
 import it.water.core.interceptors.annotations.Inject;
 import it.water.core.model.exceptions.ValidationException;
 import it.water.core.model.exceptions.WaterRuntimeException;
 import it.water.core.permission.action.UserActions;
 import it.water.core.permission.exceptions.UnauthorizedException;
-import it.water.core.testing.utils.api.TestPermissionManager;
 import it.water.core.testing.utils.bundle.TestRuntimeInitializer;
 import it.water.core.testing.utils.junit.WaterTestExtension;
 import it.water.core.testing.utils.runtime.TestRuntimeUtils;
@@ -40,7 +39,7 @@ import static it.water.core.testing.utils.runtime.TestRuntimeUtils.*;
 @ExtendWith(WaterTestExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class UserApiTest implements Service {
+class UserApiTest implements Service {
 
     @Inject
     @Setter
@@ -51,6 +50,12 @@ public class UserApiTest implements Service {
     @Inject
     @Setter
     private UserApi userApi;
+    @Inject
+    @Setter
+    private UserSystemApi userSystemApi;
+    @Inject
+    @Setter
+    private UserIntegrationClient userIntegrationClient;
     @Inject
     @Setter
     private UserRepository userRepository;
@@ -73,7 +78,7 @@ public class UserApiTest implements Service {
     private Role editor;
 
     @BeforeAll
-    public void beforeAll() {
+    void beforeAll() {
         //getting user
         manager = roleManager.getRole("userManager");
         viewer = roleManager.getRole("userViewer");
@@ -83,9 +88,9 @@ public class UserApiTest implements Service {
         Assertions.assertNotNull(editor);
         //impersonate admin so we can test the happy path
         adminUser = userManager.findUser("admin");
-        managerUser = userManager.addUser("manager", "name", "lastname", "manager@a.com","Password1_.","PasswordSalt", false);
-        viewerUser = userManager.addUser("viewer", "name", "lastname", "viewer@a.com","Password1_.","PasswordSalt", false);
-        editorUser = userManager.addUser("editor", "name", "lastname", "editor@a.com", "Password1_.","PasswordSalt",false);
+        managerUser = userManager.addUser("manager", "name", "lastname", "manager@a.com", "Password1_.", "PasswordSalt", false);
+        viewerUser = userManager.addUser("viewer", "name", "lastname", "viewer@a.com", "Password1_.", "PasswordSalt", false);
+        editorUser = userManager.addUser("editor", "name", "lastname", "editor@a.com", "Password1_.", "PasswordSalt", false);
         //starting with admin permissions
         roleManager.addRole(managerUser.getId(), manager);
         roleManager.addRole(viewerUser.getId(), viewer);
@@ -96,7 +101,7 @@ public class UserApiTest implements Service {
 
     @Test
     @Order(1)
-    public void componentsInsantiatedCorrectly() {
+    void componentsInsantiatedCorrectly() {
         this.userApi = this.componentRegistry.findComponent(UserApi.class, null);
         this.userRepository = this.componentRegistry.findComponent(UserRepository.class, null);
         Assertions.assertNotNull(this.userApi);
@@ -109,9 +114,13 @@ public class UserApiTest implements Service {
      */
     @Test
     @Order(2)
-    public void saveShouldWork() {
+    void saveShouldWork() {
         WaterUser u = createUser(0);
         u = this.userApi.save(u);
+        Assertions.assertNull(userRepository.findByUsername("NotExistingUsername"));
+        Assertions.assertNotNull(userIntegrationClient.fetchUserByUserId(u.getId()));
+        Assertions.assertNotNull(userIntegrationClient.fetchUserByUsername(u.getUsername()));
+        Assertions.assertNotNull(userIntegrationClient.fetchUserByEmailAddress(u.getEmail()));
         Assertions.assertEquals(1, u.getEntityVersion());
         Assertions.assertTrue(u.getId() > 0);
         Assertions.assertEquals("username0", u.getUsername());
@@ -122,7 +131,7 @@ public class UserApiTest implements Service {
      */
     @Test
     @Order(3)
-    public void updateShouldWork() {
+    void updateShouldWork() {
         Query q = this.userRepository.getQueryBuilderInstance().createQueryFilter("username=username0");
         WaterUser u = this.userApi.find(q);
         Assertions.assertNotNull(u);
@@ -137,7 +146,7 @@ public class UserApiTest implements Service {
      */
     @Test
     @Order(4)
-    public void updateShouldFailWithWrongVersion() {
+    void updateShouldFailWithWrongVersion() {
         Query q = this.userRepository.getQueryBuilderInstance().createQueryFilter("username=username0");
         final WaterUser errorEntity = this.userApi.find(q);
         Assertions.assertEquals("username0", errorEntity.getUsername());
@@ -151,7 +160,7 @@ public class UserApiTest implements Service {
      */
     @Test
     @Order(5)
-    public void findAllShouldWork() {
+    void findAllShouldWork() {
         PaginableResult<WaterUser> all = this.userApi.findAll(null, -1, -1, null);
         //there's one more user created automatically , the admin
         Assertions.assertEquals(5, all.getResults().size());
@@ -163,7 +172,7 @@ public class UserApiTest implements Service {
      */
     @Test
     @Order(6)
-    public void findAllPaginatedShouldWork() {
+    void findAllPaginatedShouldWork() {
         for (int i = 2; i < 11; i++) {
             WaterUser u = createUser(i);
             this.userApi.save(u);
@@ -181,7 +190,7 @@ public class UserApiTest implements Service {
 
     @Test
     @Order(7)
-    public void removeAllShouldWork() {
+    void removeAllShouldWork() {
         //removing everything but admin
         Query notRemoveAdmin = this.userRepository.getQueryBuilderInstance().field("admin").equalTo(true).not();
         Query notRemoveViewer = this.userRepository.getQueryBuilderInstance().field("username").equalTo("viewer").not();
@@ -192,7 +201,7 @@ public class UserApiTest implements Service {
         paginated.getResults().forEach(user -> {
             this.userApi.remove(user.getId());
         });
-        Assertions.assertTrue(this.userApi.countAll(null) == 4);
+        Assertions.assertEquals(4, this.userApi.countAll(null));
     }
 
     /**
@@ -200,7 +209,7 @@ public class UserApiTest implements Service {
      */
     @Test
     @Order(8)
-    public void saveShouldFailOnDuplicatedEntity() {
+    void saveShouldFailOnDuplicatedEntity() {
         String salt = new String(encryptionUtil.generate16BytesSalt());
         WaterUser u = new WaterUser("user", "user", "user", "user1S7.", salt, false, "userY@mail.com");
         this.userApi.save(u);
@@ -219,7 +228,7 @@ public class UserApiTest implements Service {
      */
     @Test
     @Order(9)
-    public void updateShouldFailOnValidationFailure() {
+    void updateShouldFailOnValidationFailure() {
         String salt = new String(encryptionUtil.generate16BytesSalt());
         WaterUser newUser = new WaterUser("<script>function(){alert('ciao')!}</script>", "lastname", "username", "Password1._", salt, false, "mail@mail.com");
         Assertions.assertThrows(ValidationException.class, () -> this.userApi.save(newUser));
@@ -230,13 +239,20 @@ public class UserApiTest implements Service {
      */
     @Order(10)
     @Test
-    public void managerCanDoEverything() {
+    void managerCanDoEverything() {
         TestRuntimeInitializer.getInstance().impersonate(managerUser, runtime);
+        final WaterUser entity = createUser(301);
+        WaterUser savedEntity = Assertions.assertDoesNotThrow(() -> this.userApi.save(entity));
+        savedEntity.setActivateCode("newSavedEntity");
+        Assertions.assertDoesNotThrow(() -> this.userApi.update(entity));
+        long savedEntityId = savedEntity.getId();
+        Assertions.assertDoesNotThrow(() -> this.userApi.find(savedEntityId));
+        Assertions.assertDoesNotThrow(() -> this.userApi.remove(savedEntityId));
     }
 
     @Order(11)
     @Test
-    public void viewerCannotSaveOrUpdateOrRemove() {
+    void viewerCannotSaveOrUpdateOrRemove() {
         TestRuntimeInitializer.getInstance().impersonate(viewerUser, runtime);
         final WaterUser entity = createUser(201);
         Assertions.assertThrows(UnauthorizedException.class, () -> this.userApi.save(entity));
@@ -245,25 +261,27 @@ public class UserApiTest implements Service {
         Assertions.assertDoesNotThrow(() -> this.userApi.find(found.getId()));
         //viewer cannot update or remove
         found.setActivateCode("changeIt!");
+        long foundEntityId = found.getId();
         Assertions.assertThrows(UnauthorizedException.class, () -> this.userApi.update(entity));
-        Assertions.assertThrows(UnauthorizedException.class, () -> this.userApi.remove(found.getId()));
+        Assertions.assertThrows(UnauthorizedException.class, () -> this.userApi.remove(foundEntityId));
     }
 
     @Order(12)
     @Test
-    public void editorCannotRemove() {
+    void editorCannotRemove() {
         TestRuntimeInitializer.getInstance().impersonate(editorUser, runtime);
         final WaterUser entity = createUser(101);
         WaterUser savedEntity = Assertions.assertDoesNotThrow(() -> this.userApi.save(entity));
         savedEntity.setActivateCode("newSavedEntity");
         Assertions.assertDoesNotThrow(() -> this.userApi.update(entity));
-        Assertions.assertDoesNotThrow(() -> this.userApi.find(savedEntity.getId()));
-        Assertions.assertThrows(UnauthorizedException.class, () -> this.userApi.remove(savedEntity.getId()));
+        long savedEntityId = savedEntity.getId();
+        Assertions.assertDoesNotThrow(() -> this.userApi.find(savedEntityId));
+        Assertions.assertThrows(UnauthorizedException.class, () -> this.userApi.remove(savedEntityId));
     }
 
     @Test
     @Order(13)
-    public void userRegistrationSuccess() {
+    void userRegistrationSuccess() {
         // the following call register a new HUser
         // response status code '200'
         runtime.fillSecurityContext(null);
@@ -284,7 +302,7 @@ public class UserApiTest implements Service {
 
     @Test
     @Order(14)
-    public void userRegistrationValidationFailures() {
+    void userRegistrationValidationFailures() {
         runtime.fillSecurityContext(null);
         WaterUser registeredUser = createUser(102);
         //username validation
@@ -324,14 +342,15 @@ public class UserApiTest implements Service {
 
     @Test
     @Order(15)
-    public void userActivation() {
+    void userActivation() {
         final WaterUser registeredUser = createUser(203);
         // Activate  huser
         Assertions.assertFalse(registeredUser.isActive());
         userApi.register(registeredUser);
         String activationCode = registeredUser.getActivateCode();
         String wrongActivationCode = "wrongActivationCode";
-        Assertions.assertThrows(UnauthorizedException.class, () -> userApi.activate(registeredUser.getEmail(), wrongActivationCode));
+        String userEmail = registeredUser.getEmail();
+        Assertions.assertThrows(UnauthorizedException.class, () -> userApi.activate(userEmail, wrongActivationCode));
         Assertions.assertFalse(registeredUser.isActive());
         userApi.activate(registeredUser.getEmail(), activationCode);
         //Checking admin functions
@@ -360,7 +379,7 @@ public class UserApiTest implements Service {
 
     @Test
     @Order(16)
-    public void resetPassword() {
+    void resetPassword() {
         final WaterUser registeredUser = createUser(204);
         // Activate  huser
         userApi.register(registeredUser);
@@ -371,39 +390,41 @@ public class UserApiTest implements Service {
         String passwordResetCode = activatedUser.getPasswordResetCode();
         Assertions.assertNotNull(passwordResetCode);
         String newPassword = "newPassword@1_";
+        String registeredUserEmail = registeredUser.getEmail();
         //wrong code
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.resetPassword(registeredUser.getEmail(), "wrongPwdResetCode", newPassword, newPassword));
+        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.resetPassword(registeredUserEmail, "wrongPwdResetCode", newPassword, newPassword));
         //null code
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.resetPassword(registeredUser.getEmail(), null, newPassword, newPassword));
+        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.resetPassword(registeredUserEmail, null, newPassword, newPassword));
         //empty code
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.resetPassword(registeredUser.getEmail(), "", newPassword, newPassword));
+        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.resetPassword(registeredUserEmail, "", newPassword, newPassword));
         //Malitious code
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.resetPassword(registeredUser.getEmail(), "<script>console.log()</script>", newPassword, newPassword));
+        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.resetPassword(registeredUserEmail, "<script>console.log()</script>", newPassword, newPassword));
         //New password is null
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.resetPassword(registeredUser.getEmail(), passwordResetCode, null, null));
+        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.resetPassword(registeredUserEmail, passwordResetCode, null, null));
         //New password is empty
-        Assertions.assertThrows(ValidationException.class, () -> userApi.resetPassword(registeredUser.getEmail(), passwordResetCode, "", ""));
+        Assertions.assertThrows(ValidationException.class, () -> userApi.resetPassword(registeredUserEmail, passwordResetCode, "", ""));
         //Password does not match
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.resetPassword(registeredUser.getEmail(), passwordResetCode, newPassword, newPassword + "!23"));
+        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.resetPassword(registeredUserEmail, passwordResetCode, newPassword, newPassword + "!23"));
         //Password confirm is null
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.resetPassword(registeredUser.getEmail(), passwordResetCode, newPassword, null));
+        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.resetPassword(registeredUserEmail, passwordResetCode, newPassword, null));
         //Password insecure
-        Assertions.assertThrows(ValidationException.class, () -> userApi.resetPassword(registeredUser.getEmail(), passwordResetCode, "newpassword", "newpassword"));
+        Assertions.assertThrows(ValidationException.class, () -> userApi.resetPassword(registeredUserEmail, passwordResetCode, "newpassword", "newpassword"));
         //New password is malitious code
-        Assertions.assertThrows(ValidationException.class, () -> userApi.resetPassword(registeredUser.getEmail(), passwordResetCode, "<script>console.log()</script>", "<script>console.log()</script>"));
+        Assertions.assertThrows(ValidationException.class, () -> userApi.resetPassword(registeredUserEmail, passwordResetCode, "<script>console.log()</script>", "<script>console.log()</script>"));
         //success
-        Assertions.assertDoesNotThrow(() -> userApi.resetPassword(registeredUser.getEmail(), passwordResetCode, newPassword, newPassword));
+        Assertions.assertDoesNotThrow(() -> userApi.resetPassword(registeredUserEmail, passwordResetCode, newPassword, newPassword));
         //password should not be the same because the system saves the hash
-        Assertions.assertNotEquals(newPassword, getAs(adminUser, () -> userApi.find(registeredUser.getId()).getPassword()));
+        String password = getAs(adminUser, () -> userApi.find(registeredUser.getId()).getPassword());
+        Assertions.assertNotEquals(newPassword, password);
         //fail because already reset without a new request
-        Assertions.assertThrows(UnauthorizedException.class, () -> userApi.resetPassword(registeredUser.getEmail(), passwordResetCode, newPassword, newPassword));
+        Assertions.assertThrows(UnauthorizedException.class, () -> userApi.resetPassword(registeredUserEmail, passwordResetCode, newPassword, newPassword));
         //Wrong email for pwdRequest
         Assertions.assertThrows(EntityNotFound.class, () -> userApi.passwordResetRequest("wrongResetPwd@mail.com"));
     }
 
     @Test
     @Order(17)
-    public void changePassword() {
+    void changePassword() {
         final WaterUser registeredUser = createUser(304);
         runAs(adminUser, () -> userApi.save(registeredUser));
         final WaterUser attackerUser = createUser(404);
@@ -412,24 +433,26 @@ public class UserApiTest implements Service {
         TestRuntimeInitializer.getInstance().impersonate(registeredUser, runtime);
         userApi.changePassword(registeredUser.getId(), registeredUser.getPassword(), newPassword, newPassword);
         Assertions.assertEquals(registeredUser.getPassword(), newPassword);
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(-1, registeredUser.getPassword(), newPassword, newPassword));
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(registeredUser.getId(), registeredUser.getPassword(), newPassword, newPassword + "-wrong"));
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(registeredUser.getId(), null, newPassword, newPassword + "-wrong"));
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(registeredUser.getId(), "", newPassword, newPassword + "-wrong"));
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(registeredUser.getId(), "<script>console.log()</script>", newPassword, newPassword + "-wrong"));
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(registeredUser.getId(), registeredUser.getPassword(), null, null));
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(registeredUser.getId(), registeredUser.getPassword(), "", ""));
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(registeredUser.getId(), registeredUser.getPassword(), "<script>console.log()</script>", "<script>console.log()</script>"));
+        String registeredUserPassword = registeredUser.getPassword();
+        long registeredUserId = registeredUser.getId();
+        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(-1, registeredUserPassword, newPassword, newPassword));
+        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(registeredUserId, registeredUserPassword, newPassword, newPassword + "-wrong"));
+        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(registeredUserId, null, newPassword, newPassword + "-wrong"));
+        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(registeredUserId, "", newPassword, newPassword + "-wrong"));
+        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(registeredUserId, "<script>console.log()</script>", newPassword, newPassword + "-wrong"));
+        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(registeredUserId, registeredUserPassword, null, null));
+        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(registeredUserId, registeredUserPassword, "", ""));
+        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(registeredUserId, registeredUserPassword, "<script>console.log()</script>", "<script>console.log()</script>"));
         runtime.fillSecurityContext(null);
         TestRuntimeInitializer.getInstance().impersonate(attackerUser, runtime);
         //trying to change password of another user
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(registeredUser.getId(), registeredUser.getPassword(), newPassword, newPassword));
+        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(registeredUserId, registeredUserPassword, newPassword, newPassword));
         runtime.fillSecurityContext(null);
     }
 
     @Test
     @Order(18)
-    public void changeAccountInfo() {
+    void changeAccountInfo() {
         final WaterUser user = createUser(504);
         runAs(adminUser, () -> userApi.save(user));
         user.updateAccountInfo("newName", "newLastName", user.getEmail(), user.getUsername());
@@ -440,7 +463,7 @@ public class UserApiTest implements Service {
 
     @Test
     @Order(19)
-    public void assertConstants() {
+    void assertConstants() {
         Assertions.assertEquals("it.water.user.activation.url", UserConstants.USER_OPT_ACTIVATION_URL);
         Assertions.assertEquals("it.water.user.registration.enabled", UserConstants.USER_OPT_REGISTRATION_ENABLED);
         Assertions.assertEquals("it.water.user.msg.error.password.not.match", UserConstants.USER_MSG_PASSWORD_DO_NOT_MATCH);
@@ -452,7 +475,7 @@ public class UserApiTest implements Service {
 
     @Test
     @Order(20)
-    public void assertActions() {
+    void assertActions() {
         Assertions.assertEquals("activate", UserActions.ACTIVATE);
         Assertions.assertEquals("deactivate", UserActions.DEACTIVATE);
         Assertions.assertEquals("impersonate", UserActions.IMPERSONATE);
@@ -461,22 +484,34 @@ public class UserApiTest implements Service {
 
     @Test
     @Order(21)
-    public void assertDefaultPropertiesValues() {
+    void assertDefaultPropertiesValues() {
         ApplicationProperties appProps = componentRegistry.findComponent(ApplicationProperties.class, null);
         UserOptions userOpts = componentRegistry.findComponent(UserOptions.class, null);
         Properties props = new Properties();
+        props.put(UserConstants.USER_OPT_DEFAULT_ADMIN_PWD, "admin");
         props.put(UserConstants.USER_OPT_REGISTRATION_ENABLED, "false");
         props.put(UserConstants.USER_OPT_ACTIVATION_URL, "activationUrl");
         props.put(UserConstants.USER_OPT_REGISTRATION_EMAIL_TEMPLATE_NAME, "registrationTemplate");
         props.put(UserConstants.USER_OPT_PASSWORD_RESET_URL, "pwdRestUrl");
         props.put(UserConstants.USER_OPT_PHYSICAL_DELETION_ENABLED, "true");
         appProps.loadProperties(props);
+        Assertions.assertEquals("admin", appProps.getProperty(UserConstants.USER_OPT_DEFAULT_ADMIN_PWD));
         Assertions.assertFalse(userOpts.isRegistrationEnabled());
         Assertions.assertTrue(userOpts.isPhysicalDeletionEnabled());
         Assertions.assertEquals("activationUrl", userOpts.getUserActivationUrl());
         Assertions.assertEquals("registrationTemplate", userOpts.getUserRegistrationEmailTemplateName());
         Assertions.assertEquals("pwdRestUrl", userOpts.getPasswordResetUrl());
+        //enabling registration for further tests
+        WaterUser user = createUser(504);
+        Assertions.assertThrows(UnauthorizedException.class, () -> userSystemApi.register(user));
+        Assertions.assertThrows(UnauthorizedException.class, () -> userSystemApi.activateUser("temp@mail.com", "activationCode"));
+        Assertions.assertThrows(UnauthorizedException.class, () -> userSystemApi.activateUser(101));
+        props.put(UserConstants.USER_OPT_REGISTRATION_ENABLED, "true");
+        appProps.loadProperties(props);
+        user.setPasswordConfirm("wrongOne");
+        Assertions.assertThrows(ValidationException.class, () -> userSystemApi.register(user));
     }
+
 
     private WaterUser createUser(int seed) {
         String salt = new String(encryptionUtil.generate16BytesSalt());

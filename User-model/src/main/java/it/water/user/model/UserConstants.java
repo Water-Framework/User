@@ -24,6 +24,7 @@ public class UserConstants {
     public static final String USER_OPT_REGISTRATION_ENABLED = "it.water.user.registration.enabled";
     public static final String USER_OPT_ACTIVATION_URL = "it.water.user.activation.url";
     public static final String USER_OPT_PASSWORD_RESET_URL = "it.water.user.password.reset.url";
+    public static final String USER_OPT_DEFAULT_ADMIN_PWD = "it.water.user.admin.default.password";
     public static final String USER_OPT_PHYSICAL_DELETION_ENABLED = "it.water.user.physical.deletion.enabled";
     public static final String USER_OPT_REGISTRATION_EMAIL_TEMPLATE_NAME = "it.water.user.registration.email.template.name";
     public static final String USER_MSG_PASSWORD_DO_NOT_MATCH = "it.water.user.msg.error.password.not.match";

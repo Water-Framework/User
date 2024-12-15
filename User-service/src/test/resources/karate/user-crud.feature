@@ -8,7 +8,7 @@ Feature: Check User Rest Api Response
 
     Given header Content-Type = 'application/json'
     And header Accept = 'application/json'
-    Given url 'http://localhost:8080/water/users'
+    Given url serviceBaseUrl+'/water/users'
     # ---- Add entity fields here -----
     And request
     """
@@ -44,7 +44,7 @@ Feature: Check User Rest Api Response
 
     Given header Content-Type = 'application/json'
     And header Accept = 'application/json'
-    Given url 'http://localhost:8080/water/users'
+    Given url serviceBaseUrl+'/water/users'
     # ---- Add entity fields here -----
     And request
     """
@@ -79,7 +79,7 @@ Feature: Check User Rest Api Response
 
     Given header Content-Type = 'application/json'
     And header Accept = 'application/json'
-    Given url 'http://localhost:8080/water/users/'+entityId
+    Given url serviceBaseUrl+'/water/users/'+entityId
     # ---------------------------------
     When method GET
     Then status 200
@@ -103,29 +103,11 @@ Feature: Check User Rest Api Response
 
     Given header Content-Type = 'application/json'
     And header Accept = 'application/json'
-    Given url 'http://localhost:8080/water/users'
+    Given url serviceBaseUrl+'/water/users'
     When method GET
     Then status 200
-    And match response ==
+    And match response.results contains
     """
-      {
-        "numPages":1,
-        "currentPage":1,
-        "nextPage":1,
-        "delta":20,
-        "results":[
-         {
-            "id": #number,
-            "entityVersion":1,
-            "entityCreateDate":'#number',
-            "entityModifyDate":'#number',
-            "name":'Admin',
-            "lastname":"Admin",
-            "email":"hadmin@water.it",
-            "username": "admin",
-            "admin": true,
-            "imagePath":null
-          },
           {
             "id": #number,
             "entityVersion":2,
@@ -138,15 +120,13 @@ Feature: Check User Rest Api Response
             "admin": false,
             "imagePath":null
           }
-        ]
-      }
     """
 
     # --------------- DELETE -----------------------------
 
     Given header Content-Type = 'application/json'
     And header Accept = 'application/json'
-    Given url 'http://localhost:8080/water/users/'+entityId
+    Given url serviceBaseUrl+'/water/users/'+entityId
     When method DELETE
     # 204 because delete response is empty, so the status code is "no content" but is ok
     Then status 204

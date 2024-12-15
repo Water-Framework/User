@@ -3,22 +3,22 @@
 # If you want to perform functional test please refer to ApiTest
 
 Feature: Check User Rest Api Response
-
   Scenario: Register User
-
+    * def username = "username"+randomSeed
+    * def email = "username"+randomSeed+"@mail.com"
     Given header Content-Type = 'application/json'
     And header Accept = 'application/json'
-    Given url 'http://localhost:8080/water/users/register'
+    Given url serviceBaseUrl+'/water/users/register'
     # ---- Add entity fields here -----
     And request
     """
     {
-       "username": "username1",
+       "username": "#(username)",
        "name":"name",
        "lastname":"lastName",
        "password":"Password1.",
        "passwordConfirm":"Password1.",
-       "email":"user@mail.com"
+       "email":"#(email)"
      }
     """
     When method POST
@@ -32,8 +32,8 @@ Feature: Check User Rest Api Response
         "entityModifyDate":'#number',
         "name":'name',
         "lastname":"lastName",
-        "email":"user@mail.com",
-        "username": "username1",
+        "email":"#(email)",
+        "username": "#(username)",
         "admin": false,
         "imagePath":null
        }
@@ -47,7 +47,7 @@ Feature: Check User Rest Api Response
 
     Given header Content-Type = 'application/json'
     And header Accept = 'application/json'
-    Given url 'http://localhost:8080/water/users/'+entityId+'/activate'
+    Given url serviceBaseUrl+'/water/users/'+entityId+'/activate'
     # ---- Add entity fields here -----
     When method PUT
     Then status 204
@@ -56,7 +56,7 @@ Feature: Check User Rest Api Response
 
     Given header Content-Type = 'application/json'
     And header Accept = 'application/json'
-    Given url 'http://localhost:8080/water/users/resetPasswordRequest?email=user@mail.com'
+    Given url serviceBaseUrl+'/water/users/resetPasswordRequest?email='+email
     # ---- Add entity fields here -----
     When method PUT
     Then status 204
@@ -66,7 +66,7 @@ Feature: Check User Rest Api Response
 
     Given header Content-Type = 'application/json'
     And header Accept = 'application/json'
-    Given url 'http://localhost:8080/water/users/'+entityId+'/deactivate'
+    Given url serviceBaseUrl+'/water/users/'+entityId+'/deactivate'
     # ---- Add entity fields here -----
     When method PUT
     Then status 204

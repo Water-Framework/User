@@ -36,6 +36,7 @@ import java.util.List;
  */
 @FrameworkComponent
 public class UserSystemServiceImpl extends BaseEntitySystemServiceImpl<WaterUser> implements UserSystemApi, UserManager {
+    private static final String USER_REGISTRATION_DISABLED_MESSAGE = "User registration is disabled!";
     @Inject
     @Setter
     @Getter
@@ -60,11 +61,11 @@ public class UserSystemServiceImpl extends BaseEntitySystemServiceImpl<WaterUser
      * On Activation let's check if the main admin exists, if not let's create it.
      */
     @OnActivate
-    public void onActivate(UserRepository userRepository, EncryptionUtil encryptionUtil) {
+    public void onActivate(UserRepository userRepository,UserOptions userOptions, EncryptionUtil encryptionUtil) {
         try {
             userRepository.find(userRepository.getQueryBuilderInstance().field("username").equalTo("wadmin"));
         } catch (NoResultException e) {
-            String tempPassword = "admin";
+            String tempPassword = userOptions.defaultAdminPwd();
             String salt = new String(encryptionUtil.generate16BytesSalt());
             WaterUser adminUser = new WaterUser("Admin", "Admin", "admin", tempPassword, salt, true, "hadmin@water.it");
             adminUser.setActive(true);
@@ -84,7 +85,7 @@ public class UserSystemServiceImpl extends BaseEntitySystemServiceImpl<WaterUser
     @Override
     public WaterUser register(WaterUser waterUser) {
         if (!userOptions.isRegistrationEnabled())
-            throw new UnauthorizedException("User registration is disabled!");
+            throw new UnauthorizedException(USER_REGISTRATION_DISABLED_MESSAGE);
         if (!waterUser.getPasswordConfirm().equals(waterUser.getPassword())) {
             throw new ValidationException(Collections.singletonList(new ValidationError("Password do not match", "password", "-")));
         }
@@ -94,14 +95,14 @@ public class UserSystemServiceImpl extends BaseEntitySystemServiceImpl<WaterUser
     @Override
     public void activateUser(String email, String activationCode) {
         if (!userOptions.isRegistrationEnabled())
-            throw new UnauthorizedException("User registration is disabled!");
+            throw new UnauthorizedException(USER_REGISTRATION_DISABLED_MESSAGE);
         repository.activateUser(email, activationCode);
     }
 
     @Override
     public void activateUser(long userId) {
         if (!userOptions.isRegistrationEnabled())
-            throw new UnauthorizedException("User registration is disabled!");
+            throw new UnauthorizedException(USER_REGISTRATION_DISABLED_MESSAGE);
         repository.activateUser(userId);
     }
 
@@ -123,7 +124,7 @@ public class UserSystemServiceImpl extends BaseEntitySystemServiceImpl<WaterUser
     @Override
     public void unregister(String email, String deletionCode) {
         if (!userOptions.isRegistrationEnabled())
-            throw new UnauthorizedException("User registration is disabled!");
+            throw new UnauthorizedException(USER_REGISTRATION_DISABLED_MESSAGE);
         repository.unregisterUser(email, deletionCode);
     }
 
