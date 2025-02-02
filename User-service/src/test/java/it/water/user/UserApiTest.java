@@ -7,6 +7,7 @@ import it.water.core.api.model.Role;
 import it.water.core.api.registry.ComponentRegistry;
 import it.water.core.api.repository.query.Query;
 import it.water.core.api.role.RoleManager;
+import it.water.core.api.security.AuthenticationProvider;
 import it.water.core.api.security.EncryptionUtil;
 import it.water.core.api.service.Service;
 import it.water.core.api.service.integration.UserIntegrationClient;
@@ -66,6 +67,9 @@ class UserApiTest implements Service {
     @Inject
     @Setter
     private UserManager userManager;
+    @Inject
+    @Setter
+    private AuthenticationProvider authenticationProvider;
     @Inject
     @Setter
     private Runtime runtime;
@@ -512,6 +516,22 @@ class UserApiTest implements Service {
         Assertions.assertThrows(ValidationException.class, () -> userSystemApi.register(user));
     }
 
+    @Test
+    @Order(22)
+    void assertLoginWorks() {
+        int seed = 604;
+        final WaterUser user = createUser(seed);
+        String username = user.getUsername();
+        runAs(adminUser, () -> userApi.save(user));
+        Assertions.assertDoesNotThrow(() -> authenticationProvider.login(username, "Password_" + seed));
+        Assertions.assertThrows(UnauthorizedException.class, () -> authenticationProvider.login(username, "WrongPassword_" + seed));
+        Assertions.assertThrows(UnauthorizedException.class, () -> authenticationProvider.login("wrontUsername", "WrongPassword_" + seed));
+        Assertions.assertThrows(UnauthorizedException.class, () -> authenticationProvider.login(username, "" ));
+        Assertions.assertThrows(UnauthorizedException.class, () -> authenticationProvider.login(username, null));
+        Assertions.assertThrows(UnauthorizedException.class, () -> authenticationProvider.login(null, null));
+        Assertions.assertThrows(UnsupportedOperationException.class, user::getRoles);
+        Assertions.assertTrue(authenticationProvider.issuersNames().contains(WaterUser.class.getName()));
+    }
 
     private WaterUser createUser(int seed) {
         String salt = new String(encryptionUtil.generate16BytesSalt());

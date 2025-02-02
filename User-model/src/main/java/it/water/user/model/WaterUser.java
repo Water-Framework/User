@@ -3,6 +3,7 @@ package it.water.user.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
+import it.water.core.api.model.Role;
 import it.water.core.api.model.User;
 import it.water.core.api.permission.ProtectedEntity;
 import it.water.core.api.service.rest.WaterJsonView;
@@ -20,6 +21,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+import java.util.Collection;
 import java.util.Collections;
 
 /**
@@ -54,7 +56,7 @@ public class WaterUser extends AbstractJpaEntity implements ProtectedEntity, Use
     public static final String DEFAULT_MANAGER_ROLE = "userManager";
     public static final String DEFAULT_VIEWER_ROLE = "userViewer";
     public static final String DEFAULT_EDITOR_ROLE = "userEditor";
-
+    public static final String WATER_USER_ISSUER = WaterUser.class.getName();
     /**
      * String name for HUser
      */
@@ -98,6 +100,7 @@ public class WaterUser extends AbstractJpaEntity implements ProtectedEntity, Use
     private String password;
 
     @Setter
+    @Getter
     @NonNull
     @JsonIgnore
     private String salt;
@@ -195,4 +198,33 @@ public class WaterUser extends AbstractJpaEntity implements ProtectedEntity, Use
         throw new ValidationException(Collections.singletonList(new ValidationError("Password do not match or invalid", "password", "-")));
     }
 
+    @JsonIgnore
+    @Override
+    public Long getLoggedEntityId() {
+        return getId();
+    }
+
+    @JsonIgnore
+    @Override
+    public String getIssuer() {
+        return WATER_USER_ISSUER;
+    }
+
+    @Override
+    @JsonIgnore
+    public Collection<Role> getRoles() {
+        throw new UnsupportedOperationException("Please use RoleManager to retrieve user roles");
+    }
+
+    @Override
+    @JsonIgnore
+    public String getScreenName() {
+        return User.super.getScreenName();
+    }
+
+    @Override
+    @JsonIgnore
+    public String getScreenNameFieldName() {
+        return User.super.getScreenNameFieldName();
+    }
 }

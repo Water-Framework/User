@@ -15,6 +15,7 @@ import it.water.core.model.exceptions.ValidationException;
 import it.water.core.model.exceptions.WaterRuntimeException;
 import it.water.core.model.validation.ValidationError;
 import it.water.core.permission.exceptions.UnauthorizedException;
+import it.water.repository.entity.model.exceptions.DuplicateEntityException;
 import it.water.repository.entity.model.exceptions.EntityNotFound;
 import it.water.repository.entity.model.exceptions.NoResultException;
 import it.water.repository.service.BaseEntitySystemServiceImpl;
@@ -25,6 +26,7 @@ import it.water.user.model.WaterUser;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -61,7 +63,7 @@ public class UserSystemServiceImpl extends BaseEntitySystemServiceImpl<WaterUser
      * On Activation let's check if the main admin exists, if not let's create it.
      */
     @OnActivate
-    public void onActivate(UserRepository userRepository,UserOptions userOptions, EncryptionUtil encryptionUtil) {
+    public void onActivate(UserRepository userRepository, UserOptions userOptions, EncryptionUtil encryptionUtil) {
         try {
             userRepository.find(userRepository.getQueryBuilderInstance().field("username").equalTo("wadmin"));
         } catch (NoResultException e) {
@@ -74,13 +76,6 @@ public class UserSystemServiceImpl extends BaseEntitySystemServiceImpl<WaterUser
         }
     }
 
-    @Override
-    public WaterUser update(WaterUser entity) {
-        WaterUser userFromDb = find(entity.getId());
-        //forcing password to not be overridden by update method
-        entity.updatePassword(userFromDb.getSalt().getBytes(), userFromDb.getPassword(), userFromDb.getPassword());
-        return super.update(entity);
-    }
 
     @Override
     public WaterUser register(WaterUser waterUser) {
@@ -148,7 +143,7 @@ public class UserSystemServiceImpl extends BaseEntitySystemServiceImpl<WaterUser
             throw new EntityNotFound();
         try {
             dbUser.setDeletionCode(deletionCode);
-            return super.update(dbUser);
+            return this .update(dbUser);
         } catch (Exception e) {
             getLog().error(e.getMessage(), e);
             throw new WaterRuntimeException("Impossible to update user deletion code");
@@ -169,6 +164,28 @@ public class UserSystemServiceImpl extends BaseEntitySystemServiceImpl<WaterUser
     public User addUser(String username, String name, String lastname, String email, String password, String salt, boolean isAdmin) {
         WaterUser newUser = new WaterUser(name, lastname, username, password, salt, isAdmin, email);
         return this.save(newUser);
+    }
+
+    @Override
+    public WaterUser update(WaterUser entity) {
+        WaterUser userFromDb = find(entity.getId());
+        //Validating with fake password since this method does not change the password itself
+        entity.updatePassword("tempSalt".getBytes(StandardCharsets.UTF_8), "Password_1", "Password_1");
+        super.validate(entity);
+        //If validation is ok, we force old password, bypassing validation which is already done
+        entity.updatePassword(userFromDb.getSalt().getBytes(), userFromDb.getPassword(), userFromDb.getPassword());
+        //calling update won't re-hash password so, basically here we just force the previous calculated hash
+        try {
+            return repository.update(entity);
+        } catch (DuplicateEntityException e) {
+            this.getLog().warn("Update failed: entity is duplicated!");
+            throw e;
+        } catch (NoResultException e) {
+            this.getLog().warn("Update failed: entity to update not found!");
+            throw e;
+        } catch (Exception e1) {
+            throw new WaterRuntimeException(e1.getMessage());
+        }
     }
 
     @Override

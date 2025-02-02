@@ -18,6 +18,7 @@ import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
@@ -151,21 +152,23 @@ public class UserRepositoryImpl extends WaterJpaRepositoryImpl<WaterUser> implem
      * @param password
      */
     public WaterUser updatePassword(long id, byte[] salt, String password) {
-        try {
-            String pwdHash = new String(encryptionUtil.hashPassword(salt, password));
-            WaterUser user = find(id);
-            user.updatePassword(salt, pwdHash, pwdHash);
-            user.setPasswordResetCode(null);
-            return this.update(user);
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-            throw new WaterRuntimeException(e);
-        }
+        WaterUser user = find(id);
+        processUserPassword(user, password, salt);
+        return this.update(user);
+    }
+
+    @Override
+    public WaterUser persist(WaterUser entity) {
+        //On persist password is plain, before saving with hash it
+        processUserPassword(entity, entity.getPassword(), entity.getSalt().getBytes(StandardCharsets.UTF_8));
+        return super.persist(entity);
     }
 
     @Override
     public PaginableResult<WaterUser> findAllDeleted(int delta, int page, Query filter, QueryOrder queryOrder) {
         return super.findAll(delta, page, customizeWithDeletedFilter(true, filter), queryOrder);
     }
+
     @Override
     public long countAllDeleted(Query filter) {
         return super.countAll(customizeWithDeletedFilter(true, filter));
@@ -190,5 +193,19 @@ public class UserRepositoryImpl extends WaterJpaRepositoryImpl<WaterUser> implem
             originalFilter = originalFilter.and(deletedFilter);
         }
         return originalFilter;
+    }
+
+    private String hashPassword(byte[] salt, String password) {
+        try {
+            return new String(encryptionUtil.hashPassword(salt, password));
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new WaterRuntimeException(e);
+        }
+    }
+
+    private void processUserPassword(WaterUser user, String password, byte[] salt) {
+        String pwdHash = hashPassword(salt, password);
+        user.updatePassword(salt, pwdHash, pwdHash);
+        user.setPasswordResetCode(null);
     }
 }
