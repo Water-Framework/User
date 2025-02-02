@@ -65,7 +65,7 @@ public class UserSystemServiceImpl extends BaseEntitySystemServiceImpl<WaterUser
     @OnActivate
     public void onActivate(UserRepository userRepository, UserOptions userOptions, EncryptionUtil encryptionUtil) {
         try {
-            userRepository.find(userRepository.getQueryBuilderInstance().field("username").equalTo("wadmin"));
+            userRepository.find(userRepository.getQueryBuilderInstance().field("username").equalTo("admin"));
         } catch (NoResultException e) {
             String tempPassword = userOptions.defaultAdminPwd();
             String salt = new String(encryptionUtil.generate16BytesSalt());
