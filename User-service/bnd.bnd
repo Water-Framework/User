@@ -20,5 +20,3 @@ Import-Package: \
 Export-Package: \
     it.water.user.*
 DynamicImport-Package: *
-Meta-Persistence: META-INF/persistence.xml
--fixupmessages "Classes found in the wrong directory"; restrict:=error; is:=warning
