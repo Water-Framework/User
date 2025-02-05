@@ -532,6 +532,10 @@ class UserApiTest implements Service {
         Assertions.assertThrows(UnauthorizedException.class, () -> authenticationProvider.login(null, null));
         Assertions.assertDoesNotThrow(user::getRoles);
         Assertions.assertTrue(authenticationProvider.issuersNames().contains(User.class.getName()));
+        Assertions.assertEquals(user.getId(),user.getLoggedEntityId());
+        Assertions.assertEquals(user.getIssuer(),User.class.getName());
+        Assertions.assertEquals(user.getScreenName(),user.getUsername());
+        Assertions.assertEquals("username",user.getScreenNameFieldName());
     }
 
     private WaterUser createUser(int seed) {
