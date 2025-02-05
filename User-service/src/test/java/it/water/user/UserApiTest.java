@@ -4,6 +4,7 @@ import it.water.core.api.bundle.ApplicationProperties;
 import it.water.core.api.bundle.Runtime;
 import it.water.core.api.model.PaginableResult;
 import it.water.core.api.model.Role;
+import it.water.core.api.model.User;
 import it.water.core.api.registry.ComponentRegistry;
 import it.water.core.api.repository.query.Query;
 import it.water.core.api.role.RoleManager;
@@ -526,11 +527,11 @@ class UserApiTest implements Service {
         Assertions.assertDoesNotThrow(() -> authenticationProvider.login(username, "Password_" + seed));
         Assertions.assertThrows(UnauthorizedException.class, () -> authenticationProvider.login(username, "WrongPassword_" + seed));
         Assertions.assertThrows(UnauthorizedException.class, () -> authenticationProvider.login("wrontUsername", "WrongPassword_" + seed));
-        Assertions.assertThrows(UnauthorizedException.class, () -> authenticationProvider.login(username, "" ));
+        Assertions.assertThrows(UnauthorizedException.class, () -> authenticationProvider.login(username, ""));
         Assertions.assertThrows(UnauthorizedException.class, () -> authenticationProvider.login(username, null));
         Assertions.assertThrows(UnauthorizedException.class, () -> authenticationProvider.login(null, null));
-        Assertions.assertThrows(UnsupportedOperationException.class, user::getRoles);
-        Assertions.assertTrue(authenticationProvider.issuersNames().contains(WaterUser.class.getName()));
+        Assertions.assertDoesNotThrow(user::getRoles);
+        Assertions.assertTrue(authenticationProvider.issuersNames().contains(User.class.getName()));
     }
 
     private WaterUser createUser(int seed) {

@@ -1,5 +1,6 @@
 package it.water.user.service;
 
+import it.water.core.api.role.RoleManager;
 import it.water.core.api.security.Authenticable;
 import it.water.core.api.security.AuthenticationProvider;
 import it.water.core.api.security.EncryptionUtil;
@@ -27,9 +28,13 @@ public class UserAuthenticationProvider implements AuthenticationProvider {
     @Setter
     private EncryptionUtil encryptionUtil;
 
+    @Inject
+    @Setter
+    private RoleManager roleManager;
+
     @Override
     public Authenticable login(String username, String password) {
-        Authenticable u = userSystemApi.findByUsername(username);
+        WaterUser u = userSystemApi.findByUsername(username);
         if (u == null || password == null || password.isBlank())
             throw new UnauthorizedException(WRONG_USER_OR_PWD_MESSAGE);
 
@@ -42,6 +47,8 @@ public class UserAuthenticationProvider implements AuthenticationProvider {
         if (!u.getPassword().equals(password))
             throw new UnauthorizedException(WRONG_USER_OR_PWD_MESSAGE);
 
+        //loading roles in order to setup authenticable correctly
+        u.setRoles(roleManager.getUserRoles(u.getId()));
         return u;
     }
 
