@@ -14,6 +14,7 @@ import org.springframework.test.context.TestPropertySource;
 @SpringBootTest(classes = UserApplication.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = {
+        "water.rest.security.jwt.validate.by.jws=false",
         "water.rest.security.jwt.validate=false",
         "water.testMode=true",
         "it.water.user.registration.enabled=true"

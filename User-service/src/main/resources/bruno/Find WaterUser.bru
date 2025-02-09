@@ -7,6 +7,9 @@ meta {
 get {
   url: {{address}}/{{contextRoot}}/users/1
   body: json
-  auth: none
+  auth: bearer
 }
 
+auth:bearer {
+  token: "eyJraWQiOiI3NDcyNzU2NSIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiJhZG1pbiIsImxvZ2dlZEVudGl0eUlkIjoxLCJyb2xlcyI6W10sImlzcyI6Iml0LndhdGVyLmNvcmUuYXBpLm1vZGVsLlVzZXIiLCJpc0FkbWluIjp0cnVlLCJleHAiOjE3MzkwOTgwMDF9.OaXR8Uw1T___NGKn8VHFb9mU4BvsgTB-xnWOT-YQPPcsQ210B4uYWSSMjWdWwmTXcWcflBF2FPFc4HU7ZYSziQ8z9VX928j-GCWpXlYOeJtZZTQ9i3-2_ocD8ex_Y6ZedNTdkZPyvkH4vjwGOF19uPZyc8xggGCGX-cpRstoMQwuEvW1JDDeQ8D97lnrWRQOnk2nQk1GgfQju37qSvvk540tc-DrGXpZKiGydmuSfuM_pqgzHWmf-uXrfxrNi3GVrU7D5GrgzT1RoHZwzlDinDWQ3lAOdfKVYdVJ9XU1XQ9MncMxDPzFmk9cq7ZaFGKghrQayTUFnGa2wMwMt5MEGg"
+}
