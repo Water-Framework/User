@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 @FrameworkComponent(services = AuthenticationProvider.class)
@@ -44,11 +45,14 @@ public class UserAuthenticationProvider implements AuthenticationProvider {
             throw new UnauthorizedException(WRONG_USER_OR_PWD_MESSAGE);
         }
 
-        if (!u.getPassword().equals(password))
-            throw new UnauthorizedException(WRONG_USER_OR_PWD_MESSAGE);
+        if (!u.getPassword().equals(password)) throw new UnauthorizedException(WRONG_USER_OR_PWD_MESSAGE);
 
-        //loading roles in order to setup authenticable correctly
-        u.setRoles(roleManager.getUserRoles(u.getId()));
+        if (roleManager != null) {
+            //loading roles in order to setup authenticable correctly
+            u.setRoles(roleManager.getUserRoles(u.getId()));
+        } else {
+            u.setRoles(Collections.emptySet());
+        }
         return u;
     }
 
