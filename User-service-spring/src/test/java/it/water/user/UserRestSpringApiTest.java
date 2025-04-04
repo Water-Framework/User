@@ -34,7 +34,7 @@ public class UserRestSpringApiTest {
 
     @Karate.Test
     Karate restInterfaceTest() {
-        return Karate.run("../User-service/src/test/resources/karate/user-crud-with-extension.feature")
+        return Karate.run("../User-service/src/test/resources/karate")
                 .systemProperty("webServerPort", String.valueOf(serverPort))
                 .systemProperty("host", "localhost")
                 .systemProperty("protocol", "http");
