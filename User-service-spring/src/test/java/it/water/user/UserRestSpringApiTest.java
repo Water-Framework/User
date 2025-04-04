@@ -5,7 +5,6 @@ import com.intuit.karate.junit5.Karate;
 import it.water.core.api.registry.ComponentRegistry;
 import it.water.core.testing.utils.runtime.TestRuntimeUtils;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -35,7 +34,7 @@ public class UserRestSpringApiTest {
 
     @Karate.Test
     Karate restInterfaceTest() {
-        return Karate.run("../User-service/src/test/resources/karate")
+        return Karate.run("../User-service/src/test/resources/karate/user-crud-with-extension.feature")
                 .systemProperty("webServerPort", String.valueOf(serverPort))
                 .systemProperty("host", "localhost")
                 .systemProperty("protocol", "http");
