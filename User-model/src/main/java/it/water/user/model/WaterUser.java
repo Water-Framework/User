@@ -1,5 +1,6 @@
 package it.water.user.model;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -16,7 +17,7 @@ import it.water.core.permission.annotations.DefaultRoleAccess;
 import it.water.core.validation.annotations.NoMalitiusCode;
 import it.water.core.validation.annotations.NotNullOnPersist;
 import it.water.core.validation.annotations.ValidPassword;
-import it.water.repository.jpa.model.AbstractJpaEntity;
+import it.water.repository.jpa.model.AbstractJpaExpandableEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -33,6 +34,7 @@ import java.util.Set;
  * - User Deletion request
  * <p>
  * This module does not provide login feature since it's a different responsability which can be addressed by authentication modules
+ * This is an expandable entity so developers can add more fields dynamically
  */
 //JPA
 @Entity
@@ -52,7 +54,7 @@ import java.util.Set;
                 @DefaultRoleAccess(roleName = WaterUser.DEFAULT_VIEWER_ROLE, actions = {CrudActions.FIND, CrudActions.FIND_ALL}),
                 @DefaultRoleAccess(roleName = WaterUser.DEFAULT_EDITOR_ROLE, actions = {CrudActions.SAVE, CrudActions.FIND, CrudActions.FIND_ALL, CrudActions.UPDATE}),
         })
-public class WaterUser extends AbstractJpaEntity implements ProtectedEntity, User {
+public class WaterUser extends AbstractJpaExpandableEntity implements ProtectedEntity, User {
     public static final String DEFAULT_MANAGER_ROLE = "userManager";
     public static final String DEFAULT_VIEWER_ROLE = "userViewer";
     public static final String DEFAULT_EDITOR_ROLE = "userEditor";
@@ -178,13 +180,13 @@ public class WaterUser extends AbstractJpaEntity implements ProtectedEntity, Use
     @JsonIgnore
     @NoMalitiusCode
     @Setter
-    public String deletionCode;
+    private String deletionCode;
 
     @Transient
     @JsonIgnore
     @Getter
     @Setter
-    public Set<Role> roles;
+    private Set<Role> roles;
 
     //Validation will be done at persist time
     public void updateAccountInfo(String name, String lastname, String email, String username) {
@@ -227,4 +229,6 @@ public class WaterUser extends AbstractJpaEntity implements ProtectedEntity, Use
     public String getScreenNameFieldName() {
         return User.super.getScreenNameFieldName();
     }
+
+
 }

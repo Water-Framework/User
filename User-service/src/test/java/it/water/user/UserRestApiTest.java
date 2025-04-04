@@ -10,7 +10,6 @@ import it.water.core.testing.utils.junit.WaterTestExtension;
 import it.water.core.testing.utils.runtime.TestRuntimeUtils;
 import lombok.Setter;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(WaterTestExtension.class)

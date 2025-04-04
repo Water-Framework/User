@@ -7,7 +7,11 @@ meta {
 post {
   url: {{address}}/{{contextRoot}}/users
   body: json
-  auth: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJraWQiOiI3NDcyNzU2NSIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiJhZG1pbiIsImxvZ2dlZEVudGl0eUlkIjoxLCJyb2xlcyI6W10sImlzcyI6Iml0LndhdGVyLmNvcmUuYXBpLm1vZGVsLlVzZXIiLCJpc0FkbWluIjp0cnVlLCJleHAiOjE3NDI2ODQ1NDl9.SCK7sBJLXcS8Z-hvLtC1_NWnsI8sJtSAzh9f1SIthpYnBagUbQHxr5sgkyOvGE5lZrz7zSvCXeTPey1H7w2ykogxmWrIkmQE1eEWI5o61a-hf8kiYz8C_EBJOdblB0Gvoca4BitWdBp9Wamq5tndIhb49H0duccC9xxsgdM7QOanWWFZZODstc148W2qzemVkCGIEmjjsvHP8_hXFL5mBSwRrjJuB2JHdHoiSqf-9Rv7MwWjlRbKXgV8rd3TYUUSIx_TTh8pjptcZIpqqSHnnd6QNWATgqzrkBD03wkxuuqr3Z3rNeQoReTjYgaZxhFkqBd6MmPzaIIgLdvtq4MjfA
 }
 
 body:json {
