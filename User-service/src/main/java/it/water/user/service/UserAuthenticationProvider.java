@@ -11,9 +11,9 @@ import it.water.user.api.UserSystemApi;
 import it.water.user.model.WaterUser;
 import lombok.Setter;
 
-import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -40,7 +40,8 @@ public class UserAuthenticationProvider implements AuthenticationProvider {
             throw new UnauthorizedException(WRONG_USER_OR_PWD_MESSAGE);
 
         try {
-            password = new String(encryptionUtil.hashPassword(u.getSalt().getBytes(StandardCharsets.UTF_8), password));
+            byte[] salt = Base64.getDecoder().decode(u.getSalt());
+            password = new String(encryptionUtil.hashPassword(salt, password));
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
             throw new UnauthorizedException(WRONG_USER_OR_PWD_MESSAGE);
         }

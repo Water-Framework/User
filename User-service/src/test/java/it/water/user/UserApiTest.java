@@ -33,6 +33,7 @@ import lombok.Setter;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.util.Base64;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -331,17 +332,18 @@ class UserApiTest implements Service {
         //restoring email value
         registeredUser.updateAccountInfo("name", "lastname", "email@email.com", "username");
         byte[] salt = encryptionUtil.generate16BytesSalt();
+        String saltStr = Base64.getEncoder().encodeToString(salt);
         //password validation
-        registeredUser.updatePassword(salt, "malfo", "malfo");
+        registeredUser.updatePassword(saltStr, "malfo", "malfo");
         assertValidationException(() -> userApi.register(registeredUser), "password", "passwordConfirm");
-        registeredUser.updatePassword(salt, "<script>console.log()</script>", "<script>console.log()</script>");
+        registeredUser.updatePassword(saltStr, "<script>console.log()</script>", "<script>console.log()</script>");
         assertValidationException(() -> userApi.register(registeredUser), "password", "passwordConfirm");
-        Assertions.assertThrows(ValidationException.class, () -> registeredUser.updatePassword(salt, null, null));
-        Assertions.assertThrows(ValidationException.class, () -> registeredUser.updatePassword(salt, "", ""));
+        Assertions.assertThrows(ValidationException.class, () -> registeredUser.updatePassword(saltStr, null, null));
+        Assertions.assertThrows(ValidationException.class, () -> registeredUser.updatePassword(saltStr, "", ""));
         assertValidationException(() -> userApi.register(registeredUser), "password", "passwordConfirm");
-        Assertions.assertThrows(ValidationException.class, () -> registeredUser.updatePassword(salt, "CorrectPassword1_.", "WrongPassword1_."));
+        Assertions.assertThrows(ValidationException.class, () -> registeredUser.updatePassword(saltStr, "CorrectPassword1_.", "WrongPassword1_."));
         assertValidationException(() -> userApi.register(registeredUser), "password", "passwordConfirm");
-        Assertions.assertThrows(ValidationException.class, () -> registeredUser.updatePassword(salt, "CorrectPassword1_.", ""));
+        Assertions.assertThrows(ValidationException.class, () -> registeredUser.updatePassword(saltStr, "CorrectPassword1_.", ""));
         assertValidationException(() -> userApi.register(registeredUser), "password", "passwordConfirm");
     }
 

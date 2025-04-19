@@ -19,7 +19,7 @@ package it.water.user.service.integration;
 import it.water.core.api.model.User;
 import it.water.core.api.service.integration.EntityRemoteIntegrationClient;
 import it.water.core.api.service.integration.UserIntegrationClient;
-import it.water.core.api.service.integration.discovery.ServiceInfo;
+import it.water.core.api.service.integration.discovery.DiscoverableServiceInfo;
 import it.water.core.interceptors.annotations.FrameworkComponent;
 
 @FrameworkComponent
@@ -27,8 +27,8 @@ public class UserIntegrationRestClient implements EntityRemoteIntegrationClient,
     //TODO: add caching mechanism
 
     @Override
-    public void setup(ServiceInfo serviceInfo) {
-        //setup data from properties
+    public void setup(DiscoverableServiceInfo discoverableServiceInfo) {
+
     }
 
     @Override

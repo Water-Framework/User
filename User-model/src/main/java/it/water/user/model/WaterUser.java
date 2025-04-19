@@ -196,9 +196,9 @@ public class WaterUser extends AbstractJpaExpandableEntity implements ProtectedE
         this.username = username;
     }
 
-    public void updatePassword(byte[] salt, String password, String passwordConfirm) {
+    public void updatePassword(String salt, String password, String passwordConfirm) {
         if (password != null && passwordConfirm != null && !password.isBlank() && !passwordConfirm.isBlank() && password.equals(passwordConfirm)) {
-            this.salt = new String(salt);
+            this.salt = salt;
             this.password = password;
             this.passwordConfirm = passwordConfirm;
             return;
