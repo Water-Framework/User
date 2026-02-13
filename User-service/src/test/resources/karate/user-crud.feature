@@ -35,7 +35,9 @@ Feature: Check User Rest Api Response
         "email":"user@mail.com",
         "username": "username1",
         "admin": false,
-        "imagePath":null
+        "imagePath":null,
+        "categoryIds": #null,
+        "tagIds": #null
        }
     """
     * def entityId = response.id
@@ -72,7 +74,9 @@ Feature: Check User Rest Api Response
         "email":"user@mail.com",
         "username": "usernameUpdated",
         "admin": false,
-        "imagePath":null
+        "imagePath":null,
+        "categoryIds": #null,
+        "tagIds": #null
        }
     """
     # --------------- FIND -----------------------------
@@ -95,7 +99,9 @@ Feature: Check User Rest Api Response
         "email":"user@mail.com",
         "username": "usernameUpdated",
         "admin": false,
-        "imagePath":null
+        "imagePath":null,
+        "categoryIds": #null,
+        "tagIds": #null
        }
     """
 
@@ -118,7 +124,9 @@ Feature: Check User Rest Api Response
             "email":"user@mail.com",
             "username": "usernameUpdated",
             "admin": false,
-            "imagePath":null
+            "imagePath":null,
+            "categoryIds": #null,
+            "tagIds": #null
           }
     """
 

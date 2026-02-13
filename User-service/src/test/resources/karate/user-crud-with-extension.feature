@@ -39,7 +39,9 @@ Feature: Check User Extesion
         "admin": false,
         "imagePath":null,
         "extensionField1":"value1",
-        "extensionField2":"value2"
+        "extensionField2":"value2",
+        "categoryIds": #null,
+        "tagIds": #null
        }
     """
     * def entityId = response.id
@@ -81,6 +83,8 @@ Feature: Check User Extesion
         "imagePath":null,
         "extensionField1":"value1*",
         "extensionField2":"value2*",
+        "categoryIds": #null,
+        "tagIds": #null
        }
     """
     # --------------- FIND -----------------------------
@@ -106,6 +110,8 @@ Feature: Check User Extesion
         "imagePath":null,
         "extensionField1":"value1*",
         "extensionField2":"value2*",
+        "categoryIds": #null,
+        "tagIds": #null
        }
     """
 
@@ -128,7 +134,9 @@ Feature: Check User Extesion
             "email":"user-extension@mail.com",
             "username": "usernameExtensionUpdated",
             "admin": false,
-            "imagePath":null
+            "imagePath":null,
+            "categoryIds": #null,
+            "tagIds": #null
           }
     """
 
