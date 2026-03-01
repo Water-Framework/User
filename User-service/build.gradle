@@ -97,6 +97,7 @@ waterDescriptor {
 
     properties {
         property('it.water.user.registration.enabled') {
+            name         = 'Self Registration'
             type         = 'boolean'
             envVar       = 'WATER_USER_REGISTRATION_ENABLED'
             required     = false
@@ -105,6 +106,7 @@ waterDescriptor {
             description  = 'Enables/disables user self-registration'
         }
         property('it.water.user.activation.url') {
+            name         = 'Activation URL'
             type         = 'url'
             envVar       = 'WATER_USER_ACTIVATION_URL'
             required     = false
@@ -113,6 +115,7 @@ waterDescriptor {
             description  = 'URL sent in the account activation email'
         }
         property('it.water.user.password.reset.url') {
+            name         = 'Password Reset URL'
             type         = 'url'
             envVar       = 'WATER_USER_PASSWORD_RESET_URL'
             required     = false
@@ -121,6 +124,7 @@ waterDescriptor {
             description  = 'URL sent in the password-reset email'
         }
         property('it.water.user.admin.default.password') {
+            name         = 'Admin Password'
             type         = 'password'
             envVar       = 'WATER_USER_ADMIN_DEFAULT_PASSWORD'
             required     = false
@@ -129,6 +133,7 @@ waterDescriptor {
             description  = 'Default admin account password (change in production!)'
         }
         property('it.water.user.physical.deletion.enabled') {
+            name         = 'Physical Deletion'
             type         = 'boolean'
             envVar       = 'WATER_USER_PHYSICAL_DELETION_ENABLED'
             required     = false
@@ -137,6 +142,7 @@ waterDescriptor {
             description  = 'If true DELETE removes DB row; if false soft-delete is applied'
         }
         property('it.water.user.registration.email.template.name') {
+            name         = 'Registration Email Template'
             type         = 'string'
             envVar       = 'WATER_USER_REGISTRATION_EMAIL_TEMPLATE_NAME'
             required     = false
@@ -149,6 +155,7 @@ waterDescriptor {
     output {
         pin('it.water.integration.authentication-issuer') {
             property('water.authentication.service.issuer') {
+                name         = 'Token Issuer'
                 required     = true
                 defaultValue = 'it.water.core.api.model.User'
                 description  = 'Issuer name for JWT tokens'
