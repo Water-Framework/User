@@ -59,4 +59,10 @@ publishing {
         	}
     }
  }
- 
+
+waterDescriptor {
+    moduleId    = 'it.water.user.spring'
+    displayName = 'User Service Spring'
+    description = 'Spring Boot runtime variant of User Service'
+    inheritsFrom project(':User-service')
+}

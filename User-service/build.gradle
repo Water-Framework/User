@@ -89,4 +89,74 @@ publishing {
         	}
     }
  }
- 
+
+waterDescriptor {
+    moduleId    = 'it.water.user'
+    displayName = 'User Service'
+    description = 'Manages user lifecycle: registration, activation, password management and authentication provider'
+
+    properties {
+        property('it.water.user.registration.enabled') {
+            type         = 'boolean'
+            envVar       = 'WATER_USER_REGISTRATION_ENABLED'
+            required     = false
+            sensitive    = false
+            defaultValue = 'false'
+            description  = 'Enables/disables user self-registration'
+        }
+        property('it.water.user.activation.url') {
+            type         = 'url'
+            envVar       = 'WATER_USER_ACTIVATION_URL'
+            required     = false
+            sensitive    = false
+            defaultValue = 'localhost:8080/water/users/activation'
+            description  = 'URL sent in the account activation email'
+        }
+        property('it.water.user.password.reset.url') {
+            type         = 'url'
+            envVar       = 'WATER_USER_PASSWORD_RESET_URL'
+            required     = false
+            sensitive    = false
+            defaultValue = 'localhost:8080/water/users/password-reset'
+            description  = 'URL sent in the password-reset email'
+        }
+        property('it.water.user.admin.default.password') {
+            type         = 'password'
+            envVar       = 'WATER_USER_ADMIN_DEFAULT_PASSWORD'
+            required     = false
+            sensitive    = true
+            defaultValue = 'admin'
+            description  = 'Default admin account password (change in production!)'
+        }
+        property('it.water.user.physical.deletion.enabled') {
+            type         = 'boolean'
+            envVar       = 'WATER_USER_PHYSICAL_DELETION_ENABLED'
+            required     = false
+            sensitive    = false
+            defaultValue = 'false'
+            description  = 'If true DELETE removes DB row; if false soft-delete is applied'
+        }
+        property('it.water.user.registration.email.template.name') {
+            type         = 'string'
+            envVar       = 'WATER_USER_REGISTRATION_EMAIL_TEMPLATE_NAME'
+            required     = false
+            sensitive    = false
+            defaultValue = ''
+            description  = 'FreeMarker template name used in registration confirmation email'
+        }
+    }
+
+    output {
+        pin('it.water.integration.authentication-issuer') {
+            property('water.authentication.service.issuer') {
+                required     = true
+                defaultValue = 'it.water.core.api.model.User'
+                description  = 'Issuer name for JWT tokens'
+            }
+        }
+    }
+
+    input {
+        standardPin 'service-discovery'
+    }
+}

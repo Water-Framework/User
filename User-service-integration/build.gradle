@@ -48,4 +48,17 @@ publishing {
         	}
     }
  }
- 
+
+waterDescriptor {
+    moduleId    = 'it.water.user.integration'
+    displayName = 'User Service Integration Client'
+    description = 'Remote REST integration client for resolving users across Water Framework microservices'
+
+    output {
+        pin('it.water.integration.user') {}
+    }
+
+    input {
+        standardPin 'service-discovery'
+    }
+}
