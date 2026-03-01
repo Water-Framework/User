@@ -35,7 +35,9 @@ Feature: Check User Rest Api Response
         "email":"#(email)",
         "username": "#(username)",
         "admin": false,
-        "imagePath":null
+        "imagePath":null,
+        "categoryIds": #null,
+        "tagIds": #null
        }
     """
     * def entityId = response.id
