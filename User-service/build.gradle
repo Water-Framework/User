@@ -152,14 +152,9 @@ waterDescriptor {
         }
     }
 
-    output {
-        pin('it.water.integration.authentication-issuer') {
-            property('water.authentication.service.issuer') {
-                name         = 'Token Issuer'
-                required     = true
-                defaultValue = 'it.water.core.api.model.User'
-                description  = 'Issuer name for JWT tokens'
-            }
+    registry {
+        entry('water.authentication.service.issuer') {
+            value = 'it.water.core.api.model.User'
         }
     }
 
