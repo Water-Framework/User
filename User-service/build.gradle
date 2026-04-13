@@ -158,6 +158,10 @@ waterDescriptor {
         }
     }
 
+    output {
+        standardPin 'jdbc'
+    }
+
     input {
         standardPin 'service-discovery'
     }
