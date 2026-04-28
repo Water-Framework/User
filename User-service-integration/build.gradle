@@ -53,6 +53,7 @@ waterDescriptor {
     moduleId    = 'it.water.user.integration'
     displayName = 'User Service Integration Client'
     description = 'Remote REST integration client for resolving users across Water Framework microservices'
+    componentsPackage = 'it.water.user.service.integration'
 
     output {
         pin('it.water.integration.user') {}

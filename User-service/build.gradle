@@ -94,6 +94,9 @@ waterDescriptor {
     moduleId    = 'it.water.user'
     displayName = 'User Service'
     description = 'Manages user lifecycle: registration, activation, password management and authentication provider'
+    componentsPackage = 'it.water.user.service'
+    repositoryPackage = 'it.water.user.repository'
+    entitiesPackage   = 'it.water.user.model'
 
     properties {
         property('it.water.user.registration.enabled') {
