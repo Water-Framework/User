@@ -78,4 +78,13 @@ public interface UserRepository extends WaterJpaRepository<WaterUser> {
      */
     WaterUser updatePassword(long id, byte[] salt, String password);
 
+    /**
+     * Stores an already-computed PHC hash verbatim, without re-hashing it.
+     * Used by the rehash-on-login upgrade path.
+     *
+     * @param id          user id
+     * @param phcPassword the PHC-format hash to store as-is
+     */
+    WaterUser updatePasswordHashVerbatim(long id, String phcPassword);
+
 }

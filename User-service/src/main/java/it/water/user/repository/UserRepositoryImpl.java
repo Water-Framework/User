@@ -4,7 +4,7 @@ import it.water.core.api.model.PaginableResult;
 import it.water.core.api.repository.query.Query;
 import it.water.core.api.repository.query.QueryBuilder;
 import it.water.core.api.repository.query.QueryOrder;
-import it.water.core.api.security.EncryptionUtil;
+import it.water.core.api.security.PasswordHashService;
 import it.water.core.interceptors.annotations.FrameworkComponent;
 import it.water.core.interceptors.annotations.Inject;
 import it.water.core.model.exceptions.WaterRuntimeException;
@@ -19,8 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
 
 /**
@@ -33,7 +31,7 @@ public class UserRepositoryImpl extends WaterJpaRepositoryImpl<WaterUser> implem
     private static final String USER_PERSISTENCE_UNIT = "user-persistence-unit";
     @Inject
     @Setter
-    private EncryptionUtil encryptionUtil;
+    private PasswordHashService passwordHashService;
     @Inject
     @Setter
     private UserOptions userOptions;
@@ -196,16 +194,21 @@ public class UserRepositoryImpl extends WaterJpaRepositoryImpl<WaterUser> implem
         return originalFilter;
     }
 
-    private String hashPassword(byte[] salt, String password) {
-        try {
-            return new String(encryptionUtil.hashPassword(salt, password));
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-            throw new WaterRuntimeException(e);
-        }
+    /**
+     * Stores an already-computed PHC hash verbatim: it must NOT pass through
+     * {@link #processUserPassword} or it would be double-hashed.
+     */
+    public WaterUser updatePasswordHashVerbatim(long id, String phcPassword) {
+        WaterUser user = find(id);
+        // salt lives inside the PHC string; legacy salt column kept untouched
+        user.updatePassword(user.getSalt(), phcPassword, phcPassword);
+        user.setPasswordResetCode(null);
+        return this.update(user);
     }
 
     private void processUserPassword(WaterUser user, String password, byte[] salt) {
-        String pwdHash = hashPassword(salt, password);
+        //salt is embedded in the PHC string: never pre-salt the clear text
+        String pwdHash = passwordHashService.hash(password.toCharArray());
         String saltStr = Base64.getEncoder().encodeToString(salt);
         user.updatePassword(saltStr, pwdHash, pwdHash);
         user.setPasswordResetCode(null);
