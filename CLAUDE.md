@@ -107,15 +107,30 @@ WaterUser addUser(String name, String lastname, String username, String email,
 ```
 
 ## UserAuthenticationProvider
-Registered automatically with the `Authentication` module. Validates `username` + `password` against the `WaterUser` table using BCrypt comparison.
+Registered automatically with the `Authentication` module. Validates `username` + `password`
+against the `WaterUser` table via `PasswordHashService` (PBKDF2/PHC, constant-time; legacy salted
+digests still supported). The verification order is:
+
+1. resolve the user by username (`findByUsername` already excludes soft-deleted users);
+2. verify the password in constant time via `PasswordHashService.matches(...)`;
+3. **reject if the account is not active or is (soft-)deleted** — using the SAME generic
+   "username or password incorrect!" message so no account-state oracle leaks;
+4. best-effort rehash-on-login when `needsRehash(...)` is true (failure never breaks login).
 
 ```java
-@FrameworkComponent
+@FrameworkComponent(services = AuthenticationProvider.class)
 public class UserAuthenticationProvider implements AuthenticationProvider {
-    @Override public String getIssuer() { return "water"; }
-    @Override public boolean authenticate(String username, String password) {
-        WaterUser user = userSystemApi.findByUsername(username);
-        return user != null && user.isActive() && BCrypt.checkpw(password, user.getPassword());
+    @Override
+    public Authenticable login(String username, String password) {
+        WaterUser u = userSystemApi.findByUsername(username);
+        if (u == null || password == null || password.isBlank())
+            throw new UnauthorizedException(WRONG_USER_OR_PWD_MESSAGE);
+        if (!passwordHashService.matches(password.toCharArray(), u.getPassword(), u.getSalt()))
+            throw new UnauthorizedException(WRONG_USER_OR_PWD_MESSAGE);
+        if (!u.isActive() || u.isDeleted())            // active/deleted gate (H30)
+            throw new UnauthorizedException(WRONG_USER_OR_PWD_MESSAGE);
+        // ... rehash-on-login + role loading
+        return u;
     }
 }
 ```

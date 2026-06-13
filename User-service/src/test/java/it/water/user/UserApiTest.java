@@ -432,28 +432,57 @@ class UserApiTest implements Service {
     @Test
     @Order(17)
     void changePassword() {
+        // H29: changePassword now verifies old password via passwordHashService.matches().
+        // The old plaintext-equality check was broken; this test is aligned to the fixed behaviour.
+        final String originalPlainPassword = "Password_304";
         final WaterUser registeredUser = createUser(304);
         runAs(adminUser, () -> userApi.save(registeredUser));
         final WaterUser attackerUser = createUser(404);
         runAs(adminUser, () -> userApi.save(attackerUser));
+        long registeredUserId = registeredUser.getId();
+
         String newPassword = "newPassw0rd._";
         TestRuntimeInitializer.getInstance().impersonate(registeredUser, runtime);
-        userApi.changePassword(registeredUser.getId(), registeredUser.getPassword(), newPassword, newPassword);
-        Assertions.assertEquals(registeredUser.getPassword(), newPassword);
-        String registeredUserPassword = registeredUser.getPassword();
-        long registeredUserId = registeredUser.getId();
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(-1, registeredUserPassword, newPassword, newPassword));
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(registeredUserId, registeredUserPassword, newPassword, newPassword + "-wrong"));
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(registeredUserId, null, newPassword, newPassword + "-wrong"));
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(registeredUserId, "", newPassword, newPassword + "-wrong"));
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(registeredUserId, "<script>console.log()</script>", newPassword, newPassword + "-wrong"));
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(registeredUserId, registeredUserPassword, null, null));
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(registeredUserId, registeredUserPassword, "", ""));
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(registeredUserId, registeredUserPassword, "<script>console.log()</script>", "<script>console.log()</script>"));
+
+        // H29-happy-path: correct plaintext old password matches the stored PHC hash → succeeds
+        WaterUser afterChange = userApi.changePassword(registeredUserId, originalPlainPassword, newPassword, newPassword);
+        Assertions.assertNotNull(afterChange, "changePassword must return the updated user");
+        // The stored password must now be a PHC hash (not the original plaintext)
+        WaterUser fromDb = getAs(adminUser, () -> userApi.find(registeredUserId));
+        Assertions.assertNotEquals(newPassword, fromDb.getPassword(),
+                "The stored password must be a hash, not the plaintext new password");
+        Assertions.assertTrue(fromDb.getPassword().startsWith("$pbkdf2-sha256$"),
+                "The stored password must be in PHC format after changePassword");
+
+        // Security: once password is changed the OLD plaintext no longer matches
+        // (original plain "Password_304" does NOT match the hash of newPassword)
+        Assertions.assertThrows(WaterRuntimeException.class,
+                () -> userApi.changePassword(registeredUserId, originalPlainPassword, newPassword, newPassword),
+                "Reusing the old password after a successful change must be rejected (H29)");
+
+        // Null / blank old password → null check branch
+        Assertions.assertThrows(WaterRuntimeException.class,
+                () -> userApi.changePassword(registeredUserId, null, newPassword, newPassword));
+        Assertions.assertThrows(WaterRuntimeException.class,
+                () -> userApi.changePassword(registeredUserId, "", newPassword, newPassword));
+
+        // Null new password / confirm → null-guard fires → WaterRuntimeException
+        Assertions.assertThrows(WaterRuntimeException.class,
+                () -> userApi.changePassword(registeredUserId, newPassword, null, null));
+        // Empty new password → passes null-check but fails updatePassword() validation
+        // (ValidationException extends RuntimeException, not WaterRuntimeException)
+        Assertions.assertThrows(RuntimeException.class,
+                () -> userApi.changePassword(registeredUserId, newPassword, "", ""));
+
+        // Wrong userId → security context mismatch → Unauthorized / WaterRuntimeException
+        Assertions.assertThrows(WaterRuntimeException.class,
+                () -> userApi.changePassword(-1L, newPassword, newPassword, newPassword));
+
         runtime.fillSecurityContext(null);
         TestRuntimeInitializer.getInstance().impersonate(attackerUser, runtime);
-        //trying to change password of another user
-        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.changePassword(registeredUserId, registeredUserPassword, newPassword, newPassword));
+        // Attacker cannot change another user's password
+        Assertions.assertThrows(WaterRuntimeException.class,
+                () -> userApi.changePassword(registeredUserId, newPassword, newPassword, newPassword));
         runtime.fillSecurityContext(null);
     }
 
@@ -471,13 +500,13 @@ class UserApiTest implements Service {
     @Test
     @Order(19)
     void assertConstants() {
-        Assertions.assertEquals("it.water.user.activation.url", UserConstants.USER_OPT_ACTIVATION_URL);
-        Assertions.assertEquals("it.water.user.registration.enabled", UserConstants.USER_OPT_REGISTRATION_ENABLED);
-        Assertions.assertEquals("it.water.user.msg.error.password.not.match", UserConstants.USER_MSG_PASSWORD_DO_NOT_MATCH);
-        Assertions.assertEquals("it.acsoftware.user.msg.error.password.not.null", UserConstants.USER_MSG_PASSWORD_NOT_NULL);
-        Assertions.assertEquals("it.water.user.password.reset.url", UserConstants.USER_OPT_PASSWORD_RESET_URL);
-        Assertions.assertEquals("it.water.user.physical.deletion.enabled", UserConstants.USER_OPT_PHYSICAL_DELETION_ENABLED);
-        Assertions.assertEquals("it.water.user.registration.email.template.name", UserConstants.USER_OPT_REGISTRATION_EMAIL_TEMPLATE_NAME);
+        Assertions.assertEquals("water.user.activation.url", UserConstants.USER_OPT_ACTIVATION_URL);
+        Assertions.assertEquals("water.user.registration.enabled", UserConstants.USER_OPT_REGISTRATION_ENABLED);
+        Assertions.assertEquals("water.user.msg.error.password.not.match", UserConstants.USER_MSG_PASSWORD_DO_NOT_MATCH);
+        Assertions.assertEquals("water.user.msg.error.password.not.null", UserConstants.USER_MSG_PASSWORD_NOT_NULL);
+        Assertions.assertEquals("water.user.password.reset.url", UserConstants.USER_OPT_PASSWORD_RESET_URL);
+        Assertions.assertEquals("water.user.physical.deletion.enabled", UserConstants.USER_OPT_PHYSICAL_DELETION_ENABLED);
+        Assertions.assertEquals("water.user.registration.email.template.name", UserConstants.USER_OPT_REGISTRATION_EMAIL_TEMPLATE_NAME);
     }
 
     @Test
@@ -526,6 +555,8 @@ class UserApiTest implements Service {
         final WaterUser user = createUser(seed);
         String username = user.getUsername();
         runAs(adminUser, () -> userApi.save(user));
+        //save() forces active=false; H30 rejects login for inactive users, so activate before asserting login works
+        runAs(adminUser, () -> userApi.activate(user.getId()));
         Assertions.assertDoesNotThrow(() -> authenticationProvider.login(username, "Password_" + seed));
         Assertions.assertThrows(UnauthorizedException.class, () -> authenticationProvider.login(username, "WrongPassword_" + seed));
         Assertions.assertThrows(UnauthorizedException.class, () -> authenticationProvider.login("wrontUsername", "WrongPassword_" + seed));

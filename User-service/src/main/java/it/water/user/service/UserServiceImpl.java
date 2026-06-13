@@ -9,6 +9,7 @@ import it.water.core.api.registry.ComponentRegistry;
 import it.water.core.api.repository.query.Query;
 import it.water.core.api.repository.query.QueryOrder;
 import it.water.core.api.security.EncryptionUtil;
+import it.water.core.api.security.PasswordHashService;
 import it.water.core.interceptors.annotations.FrameworkComponent;
 import it.water.core.interceptors.annotations.Inject;
 import it.water.core.model.exceptions.WaterRuntimeException;
@@ -65,6 +66,10 @@ public class UserServiceImpl extends BaseEntityServiceImpl<WaterUser> implements
     @Inject
     @Setter
     private EncryptionUtil encryptionUtil;
+
+    @Inject
+    @Setter
+    private PasswordHashService passwordHashService;
 
     @Inject
     @Setter
@@ -126,7 +131,7 @@ public class UserServiceImpl extends BaseEntityServiceImpl<WaterUser> implements
                 throw new UnauthorizedException("Wrong password reset code!");
             }
             if (u.getPasswordResetCode().equals(resetCode)) {
-                if (passwordMatch(password, passwordConfirm)) {
+                if (plaintextEquals(password, passwordConfirm)) {
                     this.systemService.changePassword(u, password, passwordConfirm);
                     return;
                 } else {
@@ -148,7 +153,7 @@ public class UserServiceImpl extends BaseEntityServiceImpl<WaterUser> implements
             throw new UnauthorizedException();
         WaterUser loggedUser = this.systemService.find(securityContext.getLoggedEntityId());
         if (oldPassword != null && newPassword != null && passwordConfirm != null) {
-            if (passwordMatch(oldPassword, loggedUser.getPassword())) {
+            if (passwordHashService.matches(oldPassword.toCharArray(), loggedUser.getPassword(), loggedUser.getSalt())) {
                 return this.systemService.changePassword(loggedUser, newPassword, passwordConfirm);
             } else {
                 throw new WaterRuntimeException(UserConstants.USER_MSG_PASSWORD_DO_NOT_MATCH);
@@ -217,7 +222,16 @@ public class UserServiceImpl extends BaseEntityServiceImpl<WaterUser> implements
         return systemService.countAllDeleted(filter);
     }
 
-    private boolean passwordMatch(String password, String passwordConfirm) {
+    /**
+     * Plain-text equality of two clear-text values (e.g. {@code password} vs {@code passwordConfirm}).
+     * MUST NOT be used to verify a clear-text password against a stored hash: hashes are verified
+     * via {@link PasswordHashService#matches(char[], String, String)} only.
+     *
+     * @param password        first clear-text value
+     * @param passwordConfirm second clear-text value
+     * @return true if the two clear-text values are equal
+     */
+    private boolean plaintextEquals(String password, String passwordConfirm) {
         try {
             return password.equals(passwordConfirm);
         } catch (Exception e) {

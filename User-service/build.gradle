@@ -99,7 +99,7 @@ waterDescriptor {
     entitiesPackage   = 'it.water.user.model'
 
     properties {
-        property('it.water.user.registration.enabled') {
+        property('water.user.registration.enabled') {
             name         = 'Self Registration'
             type         = 'boolean'
             envVar       = 'WATER_USER_REGISTRATION_ENABLED'
@@ -108,7 +108,7 @@ waterDescriptor {
             defaultValue = 'false'
             description  = 'Enables/disables user self-registration'
         }
-        property('it.water.user.activation.url') {
+        property('water.user.activation.url') {
             name         = 'Activation URL'
             type         = 'url'
             envVar       = 'WATER_USER_ACTIVATION_URL'
@@ -117,7 +117,7 @@ waterDescriptor {
             defaultValue = 'localhost:8080/water/users/activation'
             description  = 'URL sent in the account activation email'
         }
-        property('it.water.user.password.reset.url') {
+        property('water.user.password.reset.url') {
             name         = 'Password Reset URL'
             type         = 'url'
             envVar       = 'WATER_USER_PASSWORD_RESET_URL'
@@ -126,7 +126,7 @@ waterDescriptor {
             defaultValue = 'localhost:8080/water/users/password-reset'
             description  = 'URL sent in the password-reset email'
         }
-        property('it.water.user.admin.default.password') {
+        property('water.user.admin.default.password') {
             name         = 'Admin Password'
             type         = 'password'
             envVar       = 'WATER_USER_ADMIN_DEFAULT_PASSWORD'
@@ -135,7 +135,7 @@ waterDescriptor {
             defaultValue = 'admin'
             description  = 'Default admin account password (change in production!)'
         }
-        property('it.water.user.physical.deletion.enabled') {
+        property('water.user.physical.deletion.enabled') {
             name         = 'Physical Deletion'
             type         = 'boolean'
             envVar       = 'WATER_USER_PHYSICAL_DELETION_ENABLED'
@@ -144,7 +144,7 @@ waterDescriptor {
             defaultValue = 'false'
             description  = 'If true DELETE removes DB row; if false soft-delete is applied'
         }
-        property('it.water.user.registration.email.template.name') {
+        property('water.user.registration.email.template.name') {
             name         = 'Registration Email Template'
             type         = 'string'
             envVar       = 'WATER_USER_REGISTRATION_EMAIL_TEMPLATE_NAME'

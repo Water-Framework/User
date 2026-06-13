@@ -50,7 +50,7 @@ public class UserRepositoryImpl extends WaterJpaRepositoryImpl<WaterUser> implem
         logger.debug("Repository findByUsername {}", username);
         try {
             QueryBuilder qb = this.getQueryBuilderInstance();
-            Query byUsername = qb.field("username").equalTo(username);
+            Query byUsername = qb.field("username").equalTo(username).and(qb.field("deleted").equalTo(false));
             return this.find(byUsername);
         } catch (NoResultException e) {
             logger.debug("Entity not found...");

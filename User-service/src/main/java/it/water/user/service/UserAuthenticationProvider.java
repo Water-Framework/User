@@ -49,6 +49,11 @@ public class UserAuthenticationProvider implements AuthenticationProvider {
         if (!passwordHashService.matches(clearText, u.getPassword(), u.getSalt()))
             throw new UnauthorizedException(WRONG_USER_OR_PWD_MESSAGE);
 
+        //inactive or (soft-)deleted accounts must not log in; reuse the generic credentials
+        //message so no account-state oracle leaks to the caller
+        if (!u.isActive() || u.isDeleted())
+            throw new UnauthorizedException(WRONG_USER_OR_PWD_MESSAGE);
+
         //rehash-on-login upgrade, best-effort: a failure must never break a successful login
         if (passwordHashService.needsRehash(u.getPassword())) {
             try {

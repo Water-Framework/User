@@ -155,12 +155,12 @@ Same capabilities plus:
 
 | Property | Description | Default |
 |---|---|---|
-| `it.water.user.registration.enabled` | Enable/disable self-registration | `true` |
-| `it.water.user.activation.url` | Frontend/backend activation URL | — |
-| `it.water.user.password.reset.url` | Frontend/backend password reset URL | — |
-| `it.water.user.admin.default.password` | Default admin password | — |
-| `it.water.user.physical.deletion.enabled` | Physical vs logical deletion | `false` |
-| `it.water.user.registration.email.template.name` | Email template name for registration | `null` (uses default) |
+| `water.user.registration.enabled` | Enable/disable self-registration | `true` |
+| `water.user.activation.url` | Frontend/backend activation URL | — |
+| `water.user.password.reset.url` | Frontend/backend password reset URL | — |
+| `water.user.admin.default.password` | Default admin password | — |
+| `water.user.physical.deletion.enabled` | Physical vs logical deletion | `false` |
+| `water.user.registration.email.template.name` | Email template name for registration | `null` (uses default) |
 
 ## Email Integration
 

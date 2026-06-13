@@ -16,7 +16,7 @@ import org.springframework.test.context.TestPropertySource;
         "water.rest.security.jwt.validate.by.jws=false",
         "water.rest.security.jwt.validate=false",
         "water.testMode=true",
-        "it.water.user.registration.enabled=true"
+        "water.user.registration.enabled=true"
 })
 public class UserRestSpringApiTest {
     @Autowired
