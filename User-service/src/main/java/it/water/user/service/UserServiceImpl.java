@@ -28,6 +28,8 @@ import it.water.user.model.WaterUser;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +42,8 @@ import java.util.UUID;
 @FrameworkComponent
 public class UserServiceImpl extends BaseEntityServiceImpl<WaterUser> implements UserApi {
     private static final String USERNAME = "username";
+    //M11: single generic message for every reset-code failure (unknown email, null code, wrong code)
+    private static final String WRONG_PASSWORD_RESET_CODE_MESSAGE = "Wrong password reset code!";
 
     @Inject
     @Getter
@@ -90,6 +94,8 @@ public class UserServiceImpl extends BaseEntityServiceImpl<WaterUser> implements
         // forcing active false
         user.setActive(false);
         user.setActivateCode(UUID.randomUUID().toString());
+        //M12: stamp generation time so the activation code can expire
+        user.setActivateCodeCreatedAt(System.currentTimeMillis());
         user = this.systemService.register(user);
         this.sendRegistrationEmailNotification(user);
     }
@@ -113,35 +119,46 @@ public class UserServiceImpl extends BaseEntityServiceImpl<WaterUser> implements
 
     @Override
     public void passwordResetRequest(String email) {
+        //M11: anti-enumeration — same externally observable outcome for known and unknown emails.
+        //Never throw for an unknown email; only send the notification when the user actually exists.
+        //The REST layer should always respond with a neutral "if the email exists you'll receive
+        //instructions" message regardless of branch.
         WaterUser u = this.systemService.findByEmail(email);
         if (u != null) {
             u.setPasswordResetCode(UUID.randomUUID().toString());
+            //M12: stamp generation time so the reset code can expire
+            u.setPasswordResetCodeCreatedAt(System.currentTimeMillis());
             u = this.systemService.update(u);
             sendPasswordResetEmailNotification(u);
-        } else {
-            throw new EntityNotFound();
         }
     }
 
     @Override
     public void resetPassword(String email, String resetCode, String password, String passwordConfirm) {
+        //M11: anti-enumeration — every bad reset attempt (unknown email, missing reset code, wrong
+        //reset code) throws the SAME generic exception so the caller cannot distinguish them.
         WaterUser u = this.systemService.findByEmail(email);
         if (u != null) {
             if (u.getPasswordResetCode() == null) {
-                throw new UnauthorizedException("Wrong password reset code!");
+                throw new WaterRuntimeException(WRONG_PASSWORD_RESET_CODE_MESSAGE);
             }
-            if (u.getPasswordResetCode().equals(resetCode)) {
+            //M12: constant-time compare + TTL check. An expired code is rejected with the
+            //SAME generic message as a wrong code, so it leaks nothing extra to the caller.
+            boolean codeMatches = constantTimeEquals(u.getPasswordResetCode(), resetCode);
+            boolean notExpired = isCodeValid(u.getPasswordResetCodeCreatedAt(), userOptions.passwordResetCodeTtlMillis());
+            if (codeMatches && notExpired) {
                 if (plaintextEquals(password, passwordConfirm)) {
                     this.systemService.changePassword(u, password, passwordConfirm);
                     return;
                 } else {
+                    //password mismatch is not an enumeration vector (the caller already proved the code)
                     throw new WaterRuntimeException(UserConstants.USER_MSG_PASSWORD_DO_NOT_MATCH);
                 }
             }
-            throw new WaterRuntimeException("Wrong password reset code!");
-        } else {
-            throw new EntityNotFound();
+            throw new WaterRuntimeException(WRONG_PASSWORD_RESET_CODE_MESSAGE);
         }
+        //unknown email must be indistinguishable from a wrong reset code
+        throw new WaterRuntimeException(WRONG_PASSWORD_RESET_CODE_MESSAGE);
     }
 
     @AllowLoggedUser
@@ -231,6 +248,25 @@ public class UserServiceImpl extends BaseEntityServiceImpl<WaterUser> implements
      * @param passwordConfirm second clear-text value
      * @return true if the two clear-text values are equal
      */
+    /**
+     * M12: constant-time string comparison for one-time codes (reset/activation/deletion).
+     * Returns false if either side is null; otherwise relies on {@link MessageDigest#isEqual}
+     * which is constant-time for equal-length non-null inputs.
+     */
+    private static boolean constantTimeEquals(String a, String b) {
+        if (a == null || b == null)
+            return false;
+        return MessageDigest.isEqual(a.getBytes(StandardCharsets.UTF_8), b.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * M12: a one-time code is valid only if it was generated (createdAt non-null) and is still
+     * within its TTL window.
+     */
+    private static boolean isCodeValid(Long createdAt, long ttlMillis) {
+        return createdAt != null && (System.currentTimeMillis() - createdAt) <= ttlMillis;
+    }
+
     private boolean plaintextEquals(String password, String passwordConfirm) {
         try {
             return password.equals(passwordConfirm);

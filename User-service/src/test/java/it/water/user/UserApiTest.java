@@ -22,11 +22,11 @@ import it.water.core.testing.utils.bundle.TestRuntimeInitializer;
 import it.water.core.testing.utils.junit.WaterTestExtension;
 import it.water.core.testing.utils.runtime.TestRuntimeUtils;
 import it.water.repository.entity.model.exceptions.DuplicateEntityException;
-import it.water.repository.entity.model.exceptions.EntityNotFound;
 import it.water.user.api.UserApi;
 import it.water.user.api.UserRepository;
 import it.water.user.api.UserSystemApi;
 import it.water.user.api.options.UserOptions;
+
 import it.water.user.model.UserConstants;
 import it.water.user.model.WaterUser;
 import lombok.Setter;
@@ -423,10 +423,10 @@ class UserApiTest implements Service {
         //password should not be the same because the system saves the hash
         String password = getAs(adminUser, () -> userApi.find(registeredUser.getId()).getPassword());
         Assertions.assertNotEquals(newPassword, password);
-        //fail because already reset without a new request
-        Assertions.assertThrows(UnauthorizedException.class, () -> userApi.resetPassword(registeredUserEmail, passwordResetCode, newPassword, newPassword));
-        //Wrong email for pwdRequest
-        Assertions.assertThrows(EntityNotFound.class, () -> userApi.passwordResetRequest("wrongResetPwd@mail.com"));
+        //fail because already reset without a new request (stored code is now null -> WaterRuntimeException, not UnauthorizedException)
+        Assertions.assertThrows(WaterRuntimeException.class, () -> userApi.resetPassword(registeredUserEmail, passwordResetCode, newPassword, newPassword));
+        //M11: unknown email must NOT throw EntityNotFound — it silently does nothing (anti-enumeration)
+        Assertions.assertDoesNotThrow(() -> userApi.passwordResetRequest("wrongResetPwd@mail.com"));
     }
 
     @Test
@@ -569,6 +569,274 @@ class UserApiTest implements Service {
         Assertions.assertEquals(user.getIssuer(),User.class.getName());
         Assertions.assertEquals(user.getScreenName(),user.getUsername());
         Assertions.assertEquals("username",user.getScreenNameFieldName());
+    }
+
+    // -----------------------------------------------------------------------
+    // M2 — Admin bootstrap: testMode creates admin with "admin" password and mustChangePassword=false
+    // -----------------------------------------------------------------------
+
+    @Test
+    @Order(23)
+    void adminBootstrap_testMode_mustChangePasswordIsFalse() {
+        // In testMode the admin is bootstrapped with password "admin" and mustChangePassword=false.
+        // The admin user is created in @BeforeAll via onActivate; we just assert the state here.
+        WaterUser admin = getAs(adminUser, () -> userApi.findByUsername("admin"));
+        Assertions.assertNotNull(admin, "Admin user must exist after bootstrap");
+        Assertions.assertFalse(admin.isMustChangePassword(),
+                "In testMode the admin must NOT have mustChangePassword=true");
+        Assertions.assertTrue(admin.isAdmin(), "Admin user must have admin=true");
+        Assertions.assertTrue(admin.isActive(), "Admin user must be active after bootstrap");
+    }
+
+    @Test
+    @Order(24)
+    void encryptionUtil_generateRandomPassword_lengthAndEntropy() {
+        // EncryptionUtil.generateRandomPassword(n) is injected; test length and uniqueness.
+        final int LENGTH = 24;
+        String pwd1 = encryptionUtil.generateRandomPassword(LENGTH);
+        String pwd2 = encryptionUtil.generateRandomPassword(LENGTH);
+        Assertions.assertNotNull(pwd1, "Generated password must not be null");
+        Assertions.assertEquals(LENGTH, pwd1.length(),
+                "Generated password must have exactly the requested length");
+        Assertions.assertNotEquals(pwd1, pwd2,
+                "Two independently generated passwords must not be identical (high entropy)");
+        // Charset sanity: only printable ASCII (no control characters)
+        for (char c : pwd1.toCharArray()) {
+            Assertions.assertTrue(c >= 33 && c <= 126,
+                    "Generated password must contain only printable non-space ASCII characters");
+        }
+    }
+
+    @Test
+    @Order(25)
+    void userOptionsDefaultAdminPwd_returnsNullWhenPropertyUnset() {
+        // When the property is not in ApplicationProperties, defaultAdminPwd() must return null/blank.
+        // We read the current option before overriding, then remove the key to simulate "unset".
+        ApplicationProperties appProps = componentRegistry.findComponent(ApplicationProperties.class, null);
+        UserOptions userOpts = componentRegistry.findComponent(UserOptions.class, null);
+        // Store current value
+        String original = appProps.getProperty(UserConstants.USER_OPT_DEFAULT_ADMIN_PWD);
+        try {
+            // Override with empty string to simulate unset
+            Properties props = new Properties();
+            props.put(UserConstants.USER_OPT_DEFAULT_ADMIN_PWD, "");
+            appProps.loadProperties(props);
+            String pwd = userOpts.defaultAdminPwd();
+            // Must be null or blank when not configured
+            Assertions.assertTrue(pwd == null || pwd.isBlank(),
+                    "defaultAdminPwd() must return null or blank when property is empty");
+        } finally {
+            // Restore
+            Properties restore = new Properties();
+            if (original != null) {
+                restore.put(UserConstants.USER_OPT_DEFAULT_ADMIN_PWD, original);
+            } else {
+                restore.put(UserConstants.USER_OPT_DEFAULT_ADMIN_PWD, "admin");
+            }
+            appProps.loadProperties(restore);
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // M11 — Anti-enumeration: unknown username and wrong password produce same exception/message
+    // M11 — passwordResetRequest(unknownEmail) does not throw
+    // M11 — resetPassword with unknown email throws same exception as wrong code
+    // -----------------------------------------------------------------------
+
+    @Test
+    @Order(26)
+    void login_unknownUsername_throwsUnauthorizedException() {
+        // M11: unknown username must throw UnauthorizedException (not EntityNotFound or NPE)
+        TestRuntimeUtils.impersonateAdmin(componentRegistry);
+        Assertions.assertThrows(UnauthorizedException.class,
+                () -> authenticationProvider.login("completelyUnknownUser_M11_" + UUID.randomUUID(), "somePassword"),
+                "Unknown username must throw UnauthorizedException (anti-enumeration)");
+    }
+
+    @Test
+    @Order(27)
+    void login_wrongPassword_throwsUnauthorizedException() {
+        // M11: wrong password for a known user must throw UnauthorizedException
+        // "admin" user exists from bootstrap
+        Assertions.assertThrows(UnauthorizedException.class,
+                () -> authenticationProvider.login("admin", "definitivelyWrongPassword_M11"),
+                "Wrong password must throw UnauthorizedException");
+    }
+
+    @Test
+    @Order(28)
+    void login_unknownUsername_sameExceptionTypeAsWrongPassword() {
+        // M11: both paths must produce UnauthorizedException (same exception class)
+        Class<UnauthorizedException> expected = UnauthorizedException.class;
+        Assertions.assertThrows(expected,
+                () -> authenticationProvider.login("unknownUser_M11b", "pwd"),
+                "Unknown username path must throw UnauthorizedException");
+        Assertions.assertThrows(expected,
+                () -> authenticationProvider.login("admin", "wrongPwd_M11b"),
+                "Wrong password path must throw UnauthorizedException");
+    }
+
+    @Test
+    @Order(29)
+    void passwordResetRequest_unknownEmail_doesNotThrow() {
+        // M11: passwordResetRequest for an unknown email must silently do nothing (no EntityNotFound)
+        TestRuntimeUtils.impersonateAdmin(componentRegistry);
+        Assertions.assertDoesNotThrow(
+                () -> userApi.passwordResetRequest("completelyUnknown_m11@nowhere.invalid"),
+                "passwordResetRequest must not throw for an unknown email (anti-enumeration)");
+    }
+
+    @Test
+    @Order(30)
+    void resetPassword_unknownEmail_throwsWaterRuntimeException() {
+        // M11: unknown email for resetPassword must throw WaterRuntimeException with the generic code message
+        TestRuntimeUtils.impersonateAdmin(componentRegistry);
+        Assertions.assertThrows(WaterRuntimeException.class,
+                () -> userApi.resetPassword("unknown_m11@nowhere.invalid", "anyCode", "NewPwd1_.", "NewPwd1_."),
+                "resetPassword for unknown email must throw WaterRuntimeException (anti-enumeration)");
+    }
+
+    @Test
+    @Order(31)
+    void resetPassword_wrongCode_throwsWaterRuntimeException() {
+        // M11: wrong code for resetPassword must throw WaterRuntimeException (same as unknown email path)
+        final WaterUser user = createUser(700);
+        userApi.register(user);
+        userApi.activate(user.getEmail(), user.getActivateCode());
+        userApi.passwordResetRequest(user.getEmail());
+        String userEmail = user.getEmail();
+        // Wrong code
+        Assertions.assertThrows(WaterRuntimeException.class,
+                () -> userApi.resetPassword(userEmail, "definitively-wrong-code-M11", "NewPwd1_.", "NewPwd1_."),
+                "resetPassword with wrong code must throw WaterRuntimeException (anti-enumeration)");
+    }
+
+    // -----------------------------------------------------------------------
+    // M12 — Code expiry: TTL tests for activation, reset, deletion codes
+    // -----------------------------------------------------------------------
+
+    @Test
+    @Order(32)
+    void activation_expiredCode_throwsUnauthorizedException() throws InterruptedException {
+        // M12: set activation TTL to 1 ms so the code expires immediately
+        ApplicationProperties appProps = componentRegistry.findComponent(ApplicationProperties.class, null);
+        Properties props = new Properties();
+        props.put(UserConstants.USER_OPT_ACTIVATION_CODE_TTL_MILLIS, "1");
+        appProps.loadProperties(props);
+        try {
+            final WaterUser user = createUser(801);
+            userApi.register(user);
+            String code = user.getActivateCode();
+            String email = user.getEmail();
+            // Wait for the code to expire
+            Thread.sleep(10L); //NOSONAR: necessary to test TTL expiry
+            Assertions.assertThrows(UnauthorizedException.class,
+                    () -> userApi.activate(email, code),
+                    "An expired activation code must throw UnauthorizedException('Activation failed!')");
+        } finally {
+            // Restore default (24 h)
+            Properties restore = new Properties();
+            restore.put(UserConstants.USER_OPT_ACTIVATION_CODE_TTL_MILLIS, "86400000");
+            appProps.loadProperties(restore);
+        }
+    }
+
+    @Test
+    @Order(33)
+    void resetPassword_expiredCode_throwsWaterRuntimeException() throws InterruptedException {
+        // M12: set reset-code TTL to 1 ms so the code expires immediately
+        ApplicationProperties appProps = componentRegistry.findComponent(ApplicationProperties.class, null);
+        Properties props = new Properties();
+        props.put(UserConstants.USER_OPT_PASSWORD_RESET_CODE_TTL_MILLIS, "1");
+        appProps.loadProperties(props);
+        try {
+            final WaterUser user = createUser(802);
+            userApi.register(user);
+            userApi.activate(user.getEmail(), user.getActivateCode());
+            userApi.passwordResetRequest(user.getEmail());
+            WaterUser withCode = getAs(adminUser, () -> userApi.find(user.getId()));
+            String code = withCode.getPasswordResetCode();
+            String email = user.getEmail();
+            // Wait for the code to expire
+            Thread.sleep(10L); //NOSONAR: necessary to test TTL expiry
+            Assertions.assertThrows(WaterRuntimeException.class,
+                    () -> userApi.resetPassword(email, code, "NewPwd1_.", "NewPwd1_."),
+                    "An expired password-reset code must throw WaterRuntimeException");
+        } finally {
+            Properties restore = new Properties();
+            restore.put(UserConstants.USER_OPT_PASSWORD_RESET_CODE_TTL_MILLIS, "1800000");
+            appProps.loadProperties(restore);
+        }
+    }
+
+    @Test
+    @Order(34)
+    void unregister_expiredDeletionCode_userNotDeleted() throws InterruptedException {
+        // M12: set deletion-code TTL to 1 ms; after expiry, unregister must not soft-delete the user
+        ApplicationProperties appProps = componentRegistry.findComponent(ApplicationProperties.class, null);
+        Properties props = new Properties();
+        props.put(UserConstants.USER_OPT_DELETION_CODE_TTL_MILLIS, "1");
+        appProps.loadProperties(props);
+        try {
+            final WaterUser user = createUser(803);
+            userApi.register(user);
+            userApi.activate(user.getEmail(), user.getActivateCode());
+            // Request deletion (this stamps the deletion code + createdAt)
+            runAs(user, () -> userApi.unregisterAccountRequest());
+            String deletionCode = getAs(adminUser, () -> userApi.findByUsername(user.getUsername()).getDeletionCode());
+            String userEmail = user.getEmail();
+            // Wait for code to expire
+            Thread.sleep(10L); //NOSONAR: necessary to test TTL expiry
+            // Attempt unregister with expired code — must be silently ignored (no state change)
+            Assertions.assertDoesNotThrow(
+                    () -> runAs(user, () -> userApi.unregister(userEmail, deletionCode)),
+                    "unregister with an expired deletion code must not throw");
+            // User must NOT be soft-deleted
+            WaterUser stillActive = getAs(adminUser, () -> userApi.findByUsername(user.getUsername()));
+            Assertions.assertNotNull(stillActive, "User must still exist after expired deletion attempt");
+            Assertions.assertFalse(stillActive.isDeleted(), "User must NOT be soft-deleted after expired deletion code");
+        } finally {
+            Properties restore = new Properties();
+            restore.put(UserConstants.USER_OPT_DELETION_CODE_TTL_MILLIS, "1800000");
+            appProps.loadProperties(restore);
+        }
+    }
+
+    @Test
+    @Order(35)
+    void unregister_success_clearesDeletionCodeAndTimestamp() {
+        // M12: after successful soft-delete, deletionCode and deletionCodeCreatedAt must be cleared
+        final WaterUser user = createUser(804);
+        userApi.register(user);
+        userApi.activate(user.getEmail(), user.getActivateCode());
+        runAs(user, () -> userApi.unregisterAccountRequest());
+        String deletionCode = getAs(adminUser, () -> userApi.findByUsername(user.getUsername()).getDeletionCode());
+        String userEmail = user.getEmail();
+        Assertions.assertDoesNotThrow(() -> runAs(user, () -> userApi.unregister(userEmail, deletionCode)));
+        // After soft-delete the user appears in the deleted list and deletion code fields are cleared
+        WaterUser deleted = getAs(adminUser, () -> userApi.findAllDeleted(10, 1, null, null).getResults()
+                .stream().filter(u -> userEmail.equals(u.getEmail())).findFirst().orElse(null));
+        Assertions.assertNotNull(deleted, "Soft-deleted user must appear in findAllDeleted");
+        Assertions.assertTrue(deleted.isDeleted(), "User must be flagged as deleted");
+        Assertions.assertNull(deleted.getDeletionCode(), "deletionCode must be cleared after soft-delete (M12)");
+        Assertions.assertNull(deleted.getDeletionCodeCreatedAt(), "deletionCodeCreatedAt must be cleared after soft-delete (M12)");
+    }
+
+    @Test
+    @Order(36)
+    void resetPassword_freshCode_defaultTtl_succeeds() {
+        // M12 positive case: a freshly generated code with default TTL must still work
+        final WaterUser user = createUser(805);
+        userApi.register(user);
+        userApi.activate(user.getEmail(), user.getActivateCode());
+        userApi.passwordResetRequest(user.getEmail());
+        WaterUser withCode = getAs(adminUser, () -> userApi.find(user.getId()));
+        String code = withCode.getPasswordResetCode();
+        Assertions.assertNotNull(code, "A fresh password reset code must not be null");
+        String userEmail = user.getEmail();
+        Assertions.assertDoesNotThrow(
+                () -> userApi.resetPassword(userEmail, code, "FreshPwd1_.", "FreshPwd1_."),
+                "A fresh reset code with default TTL must succeed");
     }
 
     private WaterUser createUser(int seed) {

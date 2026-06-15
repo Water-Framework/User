@@ -29,4 +29,9 @@ public class UserConstants {
     public static final String USER_OPT_REGISTRATION_EMAIL_TEMPLATE_NAME = "water.user.registration.email.template.name";
     public static final String USER_MSG_PASSWORD_DO_NOT_MATCH = "water.user.msg.error.password.not.match";
     public static final String USER_MSG_PASSWORD_NOT_NULL = "water.user.msg.error.password.not.null";
+    public static final String USER_OPT_PASSWORD_RESET_CODE_TTL_MILLIS = "water.user.password.reset.code.ttl.millis";
+    public static final String USER_OPT_DELETION_CODE_TTL_MILLIS = "water.user.deletion.code.ttl.millis";
+    public static final String USER_OPT_ACTIVATION_CODE_TTL_MILLIS = "water.user.activation.code.ttl.millis";
+    //Framework-wide test mode flag; when true a blank admin password falls back to "admin" for test convenience
+    public static final String WATER_TEST_MODE = "water.testMode";
 }

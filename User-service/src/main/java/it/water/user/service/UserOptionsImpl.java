@@ -59,7 +59,8 @@ public class UserOptionsImpl implements UserOptions {
     public String defaultAdminPwd() {
         if (applicationProperties.getProperty(UserConstants.USER_OPT_DEFAULT_ADMIN_PWD) != null)
             return String.valueOf(applicationProperties.getProperty(UserConstants.USER_OPT_DEFAULT_ADMIN_PWD));
-        return "admin";
+        //No insecure default: when unset the bootstrap will generate a random temporary password
+        return null;
     }
 
     @Override
@@ -74,5 +75,31 @@ public class UserOptionsImpl implements UserOptions {
         if (applicationProperties.getProperty(UserConstants.USER_OPT_REGISTRATION_EMAIL_TEMPLATE_NAME) != null)
             return (String) applicationProperties.getProperty(UserConstants.USER_OPT_REGISTRATION_EMAIL_TEMPLATE_NAME);
         return null;
+    }
+
+    @Override
+    public long passwordResetCodeTtlMillis() {
+        return longProp(UserConstants.USER_OPT_PASSWORD_RESET_CODE_TTL_MILLIS, 1800000L);
+    }
+
+    @Override
+    public long deletionCodeTtlMillis() {
+        return longProp(UserConstants.USER_OPT_DELETION_CODE_TTL_MILLIS, 1800000L);
+    }
+
+    @Override
+    public long activationCodeTtlMillis() {
+        return longProp(UserConstants.USER_OPT_ACTIVATION_CODE_TTL_MILLIS, 86400000L);
+    }
+
+    private long longProp(String key, long defaultValue) {
+        Object value = applicationProperties.getProperty(key);
+        if (value == null)
+            return defaultValue;
+        try {
+            return Long.parseLong(String.valueOf(value).trim());
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 }

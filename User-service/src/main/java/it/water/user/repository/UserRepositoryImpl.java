@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Base64;
 
 /**
@@ -90,7 +91,11 @@ public class UserRepositoryImpl extends WaterJpaRepositoryImpl<WaterUser> implem
             if (user.isActive()) {
                 throw new WaterRuntimeException("User already activated");
             }
-            if (user.getActivateCode().equals(activationCode)) {
+            //M12: constant-time compare + TTL check. An expired activation code is rejected
+            //with the SAME "Activation failed!" message as a wrong code.
+            boolean codeMatches = constantTimeEquals(user.getActivateCode(), activationCode);
+            boolean notExpired = isCodeValid(user.getActivateCodeCreatedAt(), userOptions.activationCodeTtlMillis());
+            if (codeMatches && notExpired) {
                 activateUser(user);
             } else {
                 throw new UnauthorizedException("Activation failed!");
@@ -111,6 +116,8 @@ public class UserRepositoryImpl extends WaterJpaRepositoryImpl<WaterUser> implem
      */
     public void activateUser(WaterUser user) {
         user.setActivateCode(null);
+        //M12: keep the timestamp consistent with the (now null) code
+        user.setActivateCodeCreatedAt(null);
         user.setActive(true);
         this.update(user);
     }
@@ -133,11 +140,20 @@ public class UserRepositoryImpl extends WaterJpaRepositoryImpl<WaterUser> implem
      */
     public void unregisterUser(String email, String deletionCode) {
         WaterUser user = findByEmail(email);
-        if (user != null && user.getDeletionCode().equalsIgnoreCase(deletionCode)) {
+        //M12: constant-time compare (null-safe, so no NPE when stored code is null) + TTL check.
+        //An expired or non-matching code simply yields no state change, preserving prior behavior.
+        //NOTE: the deletion code was previously matched case-INSENSITIVELY; constant-time compare
+        //is exact, hence now case-SENSITIVE. Acceptable since deletion codes are generated UUIDs.
+        if (user != null
+                && constantTimeEquals(user.getDeletionCode(), deletionCode)
+                && isCodeValid(user.getDeletionCodeCreatedAt(), userOptions.deletionCodeTtlMillis())) {
             if (this.userOptions.isPhysicalDeletionEnabled()) {
                 this.remove(user.getId());
             } else {
                 user.setDeleted(true);
+                //M12: clear the consumed deletion code (+ timestamp) on soft-delete
+                user.setDeletionCode(null);
+                user.setDeletionCodeCreatedAt(null);
                 this.update(user);
             }
         }
@@ -203,6 +219,8 @@ public class UserRepositoryImpl extends WaterJpaRepositoryImpl<WaterUser> implem
         // salt lives inside the PHC string; legacy salt column kept untouched
         user.updatePassword(user.getSalt(), phcPassword, phcPassword);
         user.setPasswordResetCode(null);
+        //M12: clear dangling reset-code timestamp
+        user.setPasswordResetCodeCreatedAt(null);
         return this.update(user);
     }
 
@@ -212,5 +230,26 @@ public class UserRepositoryImpl extends WaterJpaRepositoryImpl<WaterUser> implem
         String saltStr = Base64.getEncoder().encodeToString(salt);
         user.updatePassword(saltStr, pwdHash, pwdHash);
         user.setPasswordResetCode(null);
+        //M12: clear dangling reset-code timestamp
+        user.setPasswordResetCodeCreatedAt(null);
+    }
+
+    /**
+     * M12: constant-time string comparison for one-time codes (activation/deletion).
+     * Returns false if either side is null; otherwise relies on {@link MessageDigest#isEqual}
+     * which is constant-time for equal-length non-null inputs.
+     */
+    private static boolean constantTimeEquals(String a, String b) {
+        if (a == null || b == null)
+            return false;
+        return MessageDigest.isEqual(a.getBytes(StandardCharsets.UTF_8), b.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * M12: a one-time code is valid only if it was generated (createdAt non-null) and is still
+     * within its TTL window.
+     */
+    private static boolean isCodeValid(Long createdAt, long ttlMillis) {
+        return createdAt != null && (System.currentTimeMillis() - createdAt) <= ttlMillis;
     }
 }

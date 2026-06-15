@@ -61,4 +61,19 @@ public interface UserOptions extends Service {
      */
     String getUserRegistrationEmailTemplateName();
 
+    /**
+     * @return time-to-live, in milliseconds, of a generated password reset code. Default 30 minutes.
+     */
+    long passwordResetCodeTtlMillis();
+
+    /**
+     * @return time-to-live, in milliseconds, of a generated account deletion code. Default 30 minutes.
+     */
+    long deletionCodeTtlMillis();
+
+    /**
+     * @return time-to-live, in milliseconds, of a generated activation code. Default 24 hours.
+     */
+    long activationCodeTtlMillis();
+
 }

@@ -161,6 +161,15 @@ public class WaterUser extends AbstractJpaExpandableEntity implements ProtectedE
     private boolean deleted;
 
     /**
+     * Boolean which indicate that the user must change the password at next login
+     */
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
+    @Setter
+    @JsonView(WaterJsonView.Internal.class)
+    private boolean mustChangePassword;
+
+    /**
      * the image path of the user account
      */
     @NoMalitiusCode
@@ -184,6 +193,14 @@ public class WaterUser extends AbstractJpaExpandableEntity implements ProtectedE
     private String passwordResetCode;
 
     /**
+     * Epoch millis at which the password reset code was generated. Null if no code is active.
+     */
+    @JsonIgnore
+    @Setter
+    @Column
+    private Long passwordResetCodeCreatedAt;
+
+    /**
      * Code for activation used to confirm registration by email
      */
     @NoMalitiusCode
@@ -192,12 +209,28 @@ public class WaterUser extends AbstractJpaExpandableEntity implements ProtectedE
     private String activateCode;
 
     /**
+     * Epoch millis at which the activation code was generated. Null if no code is active.
+     */
+    @JsonIgnore
+    @Setter
+    @Column
+    private Long activateCodeCreatedAt;
+
+    /**
      * Code used for user deletion
      */
     @JsonIgnore
     @NoMalitiusCode
     @Setter
     private String deletionCode;
+
+    /**
+     * Epoch millis at which the deletion code was generated. Null if no code is active.
+     */
+    @JsonIgnore
+    @Setter
+    @Column
+    private Long deletionCodeCreatedAt;
 
     @Transient
     @JsonIgnore

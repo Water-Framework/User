@@ -38,15 +38,37 @@ public class UserAuthenticationProvider implements AuthenticationProvider {
     @Setter
     private RoleManager roleManager;
 
+    //M11: lazily-computed, cached dummy PHC hash used to equalize login timing for unknown users.
+    //The PHC hash self-contains its salt, so the salt argument to matches() is unused on the PHC path.
+    private volatile String dummyHash;
+
+    private String dummyHash() {
+        String h = dummyHash;
+        if (h == null) {
+            synchronized (this) {
+                if (dummyHash == null)
+                    dummyHash = passwordHashService.hash("dummy-anti-enumeration-password".toCharArray());
+                h = dummyHash;
+            }
+        }
+        return h;
+    }
+
     @Override
     public Authenticable login(String username, String password) {
         WaterUser u = userSystemApi.findByUsername(username);
-        if (u == null || password == null || password.isBlank())
-            throw new UnauthorizedException(WRONG_USER_OR_PWD_MESSAGE);
-
-        char[] clearText = password.toCharArray();
-        //constant-time check supporting both PHC hashes and legacy salted digests
-        if (!passwordHashService.matches(clearText, u.getPassword(), u.getSalt()))
+        char[] clearText = (password == null) ? new char[0] : password.toCharArray();
+        boolean passwordOk;
+        if (u == null) {
+            //the result is discarded, we only care that the expensive verify always runs
+            passwordHashService.matches(clearText, dummyHash(), "");
+            passwordOk = false;
+        } else {
+            //constant-time check supporting both PHC hashes and legacy salted digests
+            passwordOk = password != null && !password.isBlank()
+                    && passwordHashService.matches(clearText, u.getPassword(), u.getSalt());
+        }
+        if (u == null || !passwordOk)
             throw new UnauthorizedException(WRONG_USER_OR_PWD_MESSAGE);
 
         //inactive or (soft-)deleted accounts must not log in; reuse the generic credentials
