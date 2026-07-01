@@ -531,21 +531,30 @@ class UserApiTest implements Service {
         props.put(UserConstants.USER_OPT_PASSWORD_RESET_URL, "pwdRestUrl");
         props.put(UserConstants.USER_OPT_PHYSICAL_DELETION_ENABLED, "true");
         appProps.loadProperties(props);
-        Assertions.assertEquals("admin", appProps.getProperty(UserConstants.USER_OPT_DEFAULT_ADMIN_PWD));
-        Assertions.assertFalse(userOpts.isRegistrationEnabled());
-        Assertions.assertTrue(userOpts.isPhysicalDeletionEnabled());
-        Assertions.assertEquals("activationUrl", userOpts.getUserActivationUrl());
-        Assertions.assertEquals("registrationTemplate", userOpts.getUserRegistrationEmailTemplateName());
-        Assertions.assertEquals("pwdRestUrl", userOpts.getPasswordResetUrl());
-        //enabling registration for further tests
-        WaterUser user = createUser(504);
-        Assertions.assertThrows(UnauthorizedException.class, () -> userSystemApi.register(user));
-        Assertions.assertThrows(UnauthorizedException.class, () -> userSystemApi.activateUser("temp@mail.com", "activationCode"));
-        Assertions.assertThrows(UnauthorizedException.class, () -> userSystemApi.activateUser(101));
-        props.put(UserConstants.USER_OPT_REGISTRATION_ENABLED, "true");
-        appProps.loadProperties(props);
-        user.setPasswordConfirm("wrongOne");
-        Assertions.assertThrows(ValidationException.class, () -> userSystemApi.register(user));
+        try {
+            Assertions.assertEquals("admin", appProps.getProperty(UserConstants.USER_OPT_DEFAULT_ADMIN_PWD));
+            Assertions.assertFalse(userOpts.isRegistrationEnabled());
+            Assertions.assertTrue(userOpts.isPhysicalDeletionEnabled());
+            Assertions.assertEquals("activationUrl", userOpts.getUserActivationUrl());
+            Assertions.assertEquals("registrationTemplate", userOpts.getUserRegistrationEmailTemplateName());
+            Assertions.assertEquals("pwdRestUrl", userOpts.getPasswordResetUrl());
+            //enabling registration for further tests
+            WaterUser user = createUser(504);
+            Assertions.assertThrows(UnauthorizedException.class, () -> userSystemApi.register(user));
+            Assertions.assertThrows(UnauthorizedException.class, () -> userSystemApi.activateUser("temp@mail.com", "activationCode"));
+            Assertions.assertThrows(UnauthorizedException.class, () -> userSystemApi.activateUser(101));
+            props.put(UserConstants.USER_OPT_REGISTRATION_ENABLED, "true");
+            appProps.loadProperties(props);
+            user.setPasswordConfirm("wrongOne");
+            Assertions.assertThrows(ValidationException.class, () -> userSystemApi.register(user));
+        } finally {
+            //Restore defaults so this test does not leak state into later tests (e.g. Order 35 relies on
+            //soft-delete): re-enable registration and turn physical deletion back off.
+            Properties restore = new Properties();
+            restore.put(UserConstants.USER_OPT_REGISTRATION_ENABLED, "true");
+            restore.put(UserConstants.USER_OPT_PHYSICAL_DELETION_ENABLED, "false");
+            appProps.loadProperties(restore);
+        }
     }
 
     @Test
@@ -615,7 +624,7 @@ class UserApiTest implements Service {
         ApplicationProperties appProps = componentRegistry.findComponent(ApplicationProperties.class, null);
         UserOptions userOpts = componentRegistry.findComponent(UserOptions.class, null);
         // Store current value
-        String original = appProps.getProperty(UserConstants.USER_OPT_DEFAULT_ADMIN_PWD);
+        String original = appProps.getProperty(UserConstants.USER_OPT_DEFAULT_ADMIN_PWD).toString();
         try {
             // Override with empty string to simulate unset
             Properties props = new Properties();
