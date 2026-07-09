@@ -141,8 +141,9 @@ class ChangePasswordSecurityTest implements Service {
         WaterUser user = persistNewUser(PLAIN_PASSWORD);
         TestRuntimeInitializer.getInstance().impersonate(user, runtime);
 
+        long userId = user.getId();
         Assertions.assertThrows(WaterRuntimeException.class,
-                () -> userApi.changePassword(user.getId(), "TotallyWrong99!", NEW_PASSWORD, NEW_PASSWORD),
+                () -> userApi.changePassword(userId, "TotallyWrong99!", NEW_PASSWORD, NEW_PASSWORD),
                 "changePassword must reject an incorrect old password (H29)");
 
         TestRuntimeUtils.impersonateAdmin(componentRegistry);
@@ -167,8 +168,9 @@ class ChangePasswordSecurityTest implements Service {
 
         // Attempt pass-the-hash: supply the PHC string as the old password
         TestRuntimeInitializer.getInstance().impersonate(user, runtime);
+        long userId = user.getId();
         Assertions.assertThrows(WaterRuntimeException.class,
-                () -> userApi.changePassword(user.getId(), storedPhcHash, NEW_PASSWORD, NEW_PASSWORD),
+                () -> userApi.changePassword(userId, storedPhcHash, NEW_PASSWORD, NEW_PASSWORD),
                 "Supplying the stored PHC hash as oldPassword (pass-the-hash) must be rejected");
 
         TestRuntimeUtils.impersonateAdmin(componentRegistry);
@@ -184,8 +186,9 @@ class ChangePasswordSecurityTest implements Service {
         WaterUser user = persistNewUser(PLAIN_PASSWORD);
         TestRuntimeInitializer.getInstance().impersonate(user, runtime);
 
+        long userId = user.getId();
         Assertions.assertThrows(WaterRuntimeException.class,
-                () -> userApi.changePassword(user.getId(), null, NEW_PASSWORD, NEW_PASSWORD),
+                () -> userApi.changePassword(userId, null, NEW_PASSWORD, NEW_PASSWORD),
                 "null oldPassword must be rejected (null-check branch in changePassword)");
 
         TestRuntimeUtils.impersonateAdmin(componentRegistry);
@@ -201,8 +204,9 @@ class ChangePasswordSecurityTest implements Service {
         WaterUser user = persistNewUser(PLAIN_PASSWORD);
         TestRuntimeInitializer.getInstance().impersonate(user, runtime);
 
+        long userId = user.getId();
         Assertions.assertThrows(WaterRuntimeException.class,
-                () -> userApi.changePassword(user.getId(), PLAIN_PASSWORD, null, null),
+                () -> userApi.changePassword(userId, PLAIN_PASSWORD, null, null),
                 "null newPassword must be rejected (null-check branch in changePassword)");
 
         TestRuntimeUtils.impersonateAdmin(componentRegistry);
@@ -218,8 +222,9 @@ class ChangePasswordSecurityTest implements Service {
         WaterUser user = persistNewUser(PLAIN_PASSWORD);
         TestRuntimeInitializer.getInstance().impersonate(user, runtime);
 
+        long userId = user.getId();
         Assertions.assertThrows(WaterRuntimeException.class,
-                () -> userApi.changePassword(user.getId(), PLAIN_PASSWORD, NEW_PASSWORD, null),
+                () -> userApi.changePassword(userId, PLAIN_PASSWORD, NEW_PASSWORD, null),
                 "null passwordConfirm must be rejected (null-check branch in changePassword)");
 
         TestRuntimeUtils.impersonateAdmin(componentRegistry);
@@ -238,8 +243,10 @@ class ChangePasswordSecurityTest implements Service {
         WaterUser user = persistNewUser(PLAIN_PASSWORD);
         TestRuntimeInitializer.getInstance().impersonate(user, runtime);
 
+        long userId = user.getId();
+        String mismatchedConfirm = NEW_PASSWORD + "X";
         Assertions.assertThrows(RuntimeException.class,
-                () -> userApi.changePassword(user.getId(), PLAIN_PASSWORD, NEW_PASSWORD, NEW_PASSWORD + "X"),
+                () -> userApi.changePassword(userId, PLAIN_PASSWORD, NEW_PASSWORD, mismatchedConfirm),
                 "Mismatched newPassword / passwordConfirm must be rejected (throws ValidationException or WaterRuntimeException)");
 
         TestRuntimeUtils.impersonateAdmin(componentRegistry);

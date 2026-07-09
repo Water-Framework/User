@@ -657,8 +657,9 @@ class UserApiTest implements Service {
     void login_unknownUsername_throwsUnauthorizedException() {
         // M11: unknown username must throw UnauthorizedException (not EntityNotFound or NPE)
         TestRuntimeUtils.impersonateAdmin(componentRegistry);
+        String unknownUsername = "completelyUnknownUser_M11_" + UUID.randomUUID();
         Assertions.assertThrows(UnauthorizedException.class,
-                () -> authenticationProvider.login("completelyUnknownUser_M11_" + UUID.randomUUID(), "somePassword"),
+                () -> authenticationProvider.login(unknownUsername, "somePassword"),
                 "Unknown username must throw UnauthorizedException (anti-enumeration)");
     }
 

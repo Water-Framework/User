@@ -28,7 +28,9 @@ public class UserIntegrationRestClient implements EntityRemoteIntegrationClient,
 
     @Override
     public void setup(DiscoverableServiceInfo discoverableServiceInfo) {
-
+        //Intentionally empty: this REST integration client is stateless and does not need to
+        //cache or bind the discoverable service info at setup time. The endpoint is resolved
+        //per-call when the remote REST invocations are performed (see fetch* methods).
     }
 
     @Override

@@ -41,6 +41,7 @@ import lombok.Setter;
 @FrameworkComponent
 public class UserSystemServiceImpl extends BaseEntitySystemServiceImpl<WaterUser> implements UserSystemApi, UserManager {
     private static final String USER_REGISTRATION_DISABLED_MESSAGE = "User registration is disabled!";
+    private static final String ADMIN_USERNAME = "admin";
     @Inject
     @Setter
     @Getter
@@ -67,14 +68,15 @@ public class UserSystemServiceImpl extends BaseEntitySystemServiceImpl<WaterUser
     @OnActivate
     public void onActivate(UserRepository userRepository, UserOptions userOptions, EncryptionUtil encryptionUtil, ApplicationProperties applicationProperties) {
         try {
-            userRepository.find(userRepository.getQueryBuilderInstance().field("username").equalTo("admin"));
+            userRepository.find(userRepository.getQueryBuilderInstance().field("username").equalTo(ADMIN_USERNAME));
         } catch (NoResultException e) {
             String tempPassword = userOptions.defaultAdminPwd();
             boolean generated = false;
             if (tempPassword == null || tempPassword.isBlank()) {
                 if (isTestMode(applicationProperties)) {
                     //test convenience only: keep the historical "admin" password when running tests
-                    tempPassword = "admin";
+                    //(intentionally equal to the bootstrap admin username)
+                    tempPassword = ADMIN_USERNAME;
                 } else {
                     //no admin password configured: generate a random temporary one and force a change at first login
                     tempPassword = encryptionUtil.generateRandomPassword(24);
@@ -83,7 +85,7 @@ public class UserSystemServiceImpl extends BaseEntitySystemServiceImpl<WaterUser
             }
             byte[] salt = encryptionUtil.generate16BytesSalt();
             String saltString = Base64.getEncoder().encodeToString(salt);
-            WaterUser adminUser = new WaterUser("Admin", "Admin", "admin", tempPassword, saltString, true, "hadmin@water.it");
+            WaterUser adminUser = new WaterUser("Admin", "Admin", ADMIN_USERNAME, tempPassword, saltString, true, "hadmin@water.it");
             adminUser.setActive(true);
             adminUser.updatePassword(saltString, tempPassword, tempPassword);
             adminUser.setMustChangePassword(generated);

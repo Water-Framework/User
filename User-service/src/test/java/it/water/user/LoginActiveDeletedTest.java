@@ -79,9 +79,10 @@ class LoginActiveDeletedTest implements Service {
     @Order(1)
     void loginInactiveUserIsRejected() {
         WaterUser user = buildAndPersistUser("h30inactive_", false, false);
+        String username = user.getUsername();
 
         UnauthorizedException ex = Assertions.assertThrows(UnauthorizedException.class,
-                () -> authenticationProvider.login(user.getUsername(), TEST_PLAIN_PASSWORD),
+                () -> authenticationProvider.login(username, TEST_PLAIN_PASSWORD),
                 "An inactive (not activated) user must not be able to log in (H30)");
 
         Assertions.assertEquals(WRONG_USER_OR_PWD_MSG, ex.getMessage(),
@@ -101,9 +102,10 @@ class LoginActiveDeletedTest implements Service {
 
         // Deactivate the user
         userRepository.deactivateUser(user.getId());
+        String username = user.getUsername();
 
         UnauthorizedException ex = Assertions.assertThrows(UnauthorizedException.class,
-                () -> authenticationProvider.login(user.getUsername(), TEST_PLAIN_PASSWORD),
+                () -> authenticationProvider.login(username, TEST_PLAIN_PASSWORD),
                 "A deactivated user (active=false, deleted=false) must not be able to log in (H30)");
 
         Assertions.assertEquals(WRONG_USER_OR_PWD_MSG, ex.getMessage(),
@@ -132,8 +134,9 @@ class LoginActiveDeletedTest implements Service {
                 "findByUsername must return null for a soft-deleted user (H30 filter: deleted=false)");
 
         // login must return the same generic error — the user effectively disappears
+        String username = user.getUsername();
         Assertions.assertThrows(UnauthorizedException.class,
-                () -> authenticationProvider.login(user.getUsername(), TEST_PLAIN_PASSWORD),
+                () -> authenticationProvider.login(username, TEST_PLAIN_PASSWORD),
                 "A soft-deleted user must not be able to log in (H30)");
 
         // Physical cleanup — find by id since findByUsername excludes deleted
@@ -204,8 +207,9 @@ class LoginActiveDeletedTest implements Service {
         userRepository.update(fromDb);
 
         // findByUsername returns null → UnauthorizedException (user not found path)
+        String username = user.getUsername();
         Assertions.assertThrows(UnauthorizedException.class,
-                () -> authenticationProvider.login(user.getUsername(), TEST_PLAIN_PASSWORD),
+                () -> authenticationProvider.login(username, TEST_PLAIN_PASSWORD),
                 "An inactive AND soft-deleted user must not be able to log in");
 
         // Physical cleanup
@@ -218,9 +222,10 @@ class LoginActiveDeletedTest implements Service {
     @Order(8)
     void loginWrongPasswordForActiveUserUsesGenericMessage() {
         WaterUser user = buildAndPersistUser("h30wrongpwd_", true, false);
+        String username = user.getUsername();
 
         UnauthorizedException ex = Assertions.assertThrows(UnauthorizedException.class,
-                () -> authenticationProvider.login(user.getUsername(), "TotallyWrong99!"),
+                () -> authenticationProvider.login(username, "TotallyWrong99!"),
                 "Wrong password for an active user must throw UnauthorizedException");
 
         Assertions.assertEquals(WRONG_USER_OR_PWD_MSG, ex.getMessage(),

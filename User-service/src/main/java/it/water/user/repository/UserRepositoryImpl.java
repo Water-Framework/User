@@ -30,6 +30,7 @@ import java.util.Base64;
 public class UserRepositoryImpl extends WaterJpaRepositoryImpl<WaterUser> implements UserRepository {
     private static Logger logger = LoggerFactory.getLogger(UserRepositoryImpl.class);
     private static final String USER_PERSISTENCE_UNIT = "user-persistence-unit";
+    private static final String DELETED_FIELD = "deleted";
     @Inject
     @Setter
     private PasswordHashService passwordHashService;
@@ -51,7 +52,7 @@ public class UserRepositoryImpl extends WaterJpaRepositoryImpl<WaterUser> implem
         logger.debug("Repository findByUsername {}", username);
         try {
             QueryBuilder qb = this.getQueryBuilderInstance();
-            Query byUsername = qb.field("username").equalTo(username).and(qb.field("deleted").equalTo(false));
+            Query byUsername = qb.field("username").equalTo(username).and(qb.field(DELETED_FIELD).equalTo(false));
             return this.find(byUsername);
         } catch (NoResultException e) {
             logger.debug("Entity not found...");
@@ -71,7 +72,7 @@ public class UserRepositoryImpl extends WaterJpaRepositoryImpl<WaterUser> implem
         logger.debug("Repository findByEmail {}", email);
         try {
             QueryBuilder qb = this.getQueryBuilderInstance();
-            Query byEmail = qb.field("email").equalTo(email.toLowerCase()).and(qb.field("deleted").equalTo(false));
+            Query byEmail = qb.field("email").equalTo(email.toLowerCase()).and(qb.field(DELETED_FIELD).equalTo(false));
             return this.find(byEmail);
         } catch (NoResultException e) {
             logger.debug("Entity not found...");
@@ -201,7 +202,7 @@ public class UserRepositoryImpl extends WaterJpaRepositoryImpl<WaterUser> implem
 
     private Query customizeWithDeletedFilter(boolean deletedUserValue, Query originalFilter) {
         QueryBuilder qb = this.getQueryBuilderInstance();
-        Query deletedFilter = qb.field("deleted").equalTo(deletedUserValue);
+        Query deletedFilter = qb.field(DELETED_FIELD).equalTo(deletedUserValue);
         if (originalFilter == null) {
             originalFilter = deletedFilter;
         } else {
