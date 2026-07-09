@@ -6,7 +6,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import it.water.core.api.bundle.ApplicationProperties;
 import it.water.core.api.bundle.Runtime;
 import it.water.core.api.interceptors.OnActivate;
 import it.water.core.api.model.PaginableResult;
@@ -29,7 +28,6 @@ import it.water.repository.service.BaseEntitySystemServiceImpl;
 import it.water.user.api.UserRepository;
 import it.water.user.api.UserSystemApi;
 import it.water.user.api.options.UserOptions;
-import it.water.user.model.UserConstants;
 import it.water.user.model.WaterUser;
 import lombok.Getter;
 import lombok.Setter;
@@ -66,22 +64,16 @@ public class UserSystemServiceImpl extends BaseEntitySystemServiceImpl<WaterUser
      * On Activation let's check if the main admin exists, if not let's create it.
      */
     @OnActivate
-    public void onActivate(UserRepository userRepository, UserOptions userOptions, EncryptionUtil encryptionUtil, ApplicationProperties applicationProperties) {
+    public void onActivate(UserRepository userRepository, UserOptions userOptions, EncryptionUtil encryptionUtil) {
         try {
             userRepository.find(userRepository.getQueryBuilderInstance().field("username").equalTo(ADMIN_USERNAME));
         } catch (NoResultException e) {
             String tempPassword = userOptions.defaultAdminPwd();
             boolean generated = false;
             if (tempPassword == null || tempPassword.isBlank()) {
-                if (isTestMode(applicationProperties)) {
-                    //test convenience only: keep the historical "admin" password when running tests
-                    //(intentionally equal to the bootstrap admin username)
-                    tempPassword = ADMIN_USERNAME;
-                } else {
-                    //no admin password configured: generate a random temporary one and force a change at first login
-                    tempPassword = encryptionUtil.generateRandomPassword(24);
-                    generated = true;
-                }
+                //no admin password configured: generate a random temporary one and force a change at first login
+                tempPassword = encryptionUtil.generateRandomPassword(24);
+                generated = true;
             }
             byte[] salt = encryptionUtil.generate16BytesSalt();
             String saltString = Base64.getEncoder().encodeToString(salt);
@@ -94,18 +86,6 @@ public class UserSystemServiceImpl extends BaseEntitySystemServiceImpl<WaterUser
                 getLog().warn("Bootstrap admin user 'admin' created with a GENERATED temporary password (shown once, change it immediately): {}", tempPassword);
         }
     }
-
-    /**
-     * Reads the framework-wide test mode flag (water.testMode) using the same mechanism
-     * adopted across the framework (see AuthenticationSystemServiceImpl lockout gating).
-     */
-    private boolean isTestMode(ApplicationProperties applicationProperties) {
-        if (applicationProperties == null)
-            return false;
-        Object raw = applicationProperties.getProperty(UserConstants.WATER_TEST_MODE);
-        return raw != null && Boolean.parseBoolean(raw.toString().trim());
-    }
-
 
     @Override
     public WaterUser register(WaterUser waterUser) {

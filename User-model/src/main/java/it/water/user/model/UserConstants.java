@@ -32,6 +32,7 @@ public class UserConstants {
     public static final String USER_OPT_PASSWORD_RESET_CODE_TTL_MILLIS = "water.user.password.reset.code.ttl.millis";
     public static final String USER_OPT_DELETION_CODE_TTL_MILLIS = "water.user.deletion.code.ttl.millis";
     public static final String USER_OPT_ACTIVATION_CODE_TTL_MILLIS = "water.user.activation.code.ttl.millis";
-    //Framework-wide test mode flag; when true a blank admin password falls back to "admin" for test convenience
+    //Framework-wide test mode flag (e.g. relaxes JWT validation). The bootstrap admin password is NOT derived
+    //from this flag: set water.user.admin.default.password explicitly (see USER_OPT_DEFAULT_ADMIN_PWD) to pin it.
     public static final String WATER_TEST_MODE = "water.testMode";
 }
