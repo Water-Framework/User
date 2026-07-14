@@ -195,6 +195,16 @@ userApi.deactivate(userId);
 userApi.activate(userId);
 ```
 
+## Multitenancy (Company-based)
+
+The User module owns the tenant membership for users.
+
+- New entity `UserCompany` — many-to-many membership `(userId, companyId, primary)`, with `companyId` an opaque `Long` (no JPA relation to Company).
+- `WaterUser implements MultiTenantResource` (M:N, no `companyId` column); a `UserTenantMembershipResolver` (`@FrameworkComponent`) resolves the user ids belonging to a company for tenant-scoped queries.
+- `UserAuthenticationProvider` performs the login membership gate and user-level impersonation (see the Authentication module).
+
+Deferred: company-aware role assignment/resolution and granular per-entity opt-out (see `multitenancy-analysis-proposal.md`).
+
 ## Dependencies
 
 - **Core-api** — Base interfaces (`BaseEntityApi`, `BaseEntitySystemApi`, `User`)

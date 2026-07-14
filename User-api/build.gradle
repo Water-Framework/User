@@ -18,6 +18,9 @@ dependencies {
 	implementation group: "it.water.service.rest", name: "Rest-api", version: project.waterVersion
 	// https://mvnrepository.com/artifact/io.swagger/swagger-jaxrs
     implementation group: 'io.swagger', name: 'swagger-jaxrs', version: project.swaggerJaxRsVersion
+	implementation group:"jakarta.persistence", name:"jakarta.persistence-api", version: project.jakartaPersistenceVersion
+	implementation group:"it.water.repository.jpa", name:"JpaRepository-api", version: project.waterVersion
+	implementation group:"it.water.repository", name:"Repository-entity", version: project.waterVersion
 }
 
 publishing {

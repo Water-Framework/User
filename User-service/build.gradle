@@ -75,7 +75,9 @@ dependencies {
 	testImplementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: project.jettyVersion
 	// https://mvnrepository.com/artifact/com.intuit.karate/karate-junit5
 	testImplementation ('io.karatelabs:karate-junit5:'+project.karateVersion)
-
+	implementation group:"it.water.repository.jpa", name:"JpaRepository-api", version: project.waterVersion
+	implementation group:"jakarta.transaction", name:"jakarta.transaction-api", version: project.jakartaTransactionApiVersion
+	implementation group:"jakarta.persistence", name:"jakarta.persistence-api", version: project.jakartaPersistenceVersion
 }
 
 test {

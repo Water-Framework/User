@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 
+import it.water.core.api.entity.tenant.MultiTenantResource;
 import it.water.core.api.model.Role;
 import it.water.core.api.model.User;
 import it.water.core.api.permission.ProtectedEntity;
@@ -68,11 +69,11 @@ import lombok.ToString;
 @EqualsAndHashCode(of = {"username", "email"},callSuper = true)
 @AccessControl(availableActions = {CrudActions.SAVE, CrudActions.REMOVE, CrudActions.FIND, CrudActions.FIND_ALL, CrudActions.UPDATE, UserActions.IMPERSONATE, UserActions.ACTIVATE, UserActions.DEACTIVATE},
         rolesPermissions = {
-                @DefaultRoleAccess(roleName = WaterUser.DEFAULT_MANAGER_ROLE, actions = {CrudActions.SAVE, CrudActions.REMOVE, CrudActions.FIND, CrudActions.FIND_ALL, CrudActions.UPDATE, UserActions.IMPERSONATE, UserActions.ACTIVATE, UserActions.DEACTIVATE}),
+                @DefaultRoleAccess(roleName = WaterUser.DEFAULT_MANAGER_ROLE, actions = {CrudActions.SAVE, CrudActions.REMOVE, CrudActions.FIND, CrudActions.FIND_ALL, CrudActions.UPDATE, UserActions.ACTIVATE, UserActions.DEACTIVATE}),
                 @DefaultRoleAccess(roleName = WaterUser.DEFAULT_VIEWER_ROLE, actions = {CrudActions.FIND, CrudActions.FIND_ALL}),
                 @DefaultRoleAccess(roleName = WaterUser.DEFAULT_EDITOR_ROLE, actions = {CrudActions.SAVE, CrudActions.FIND, CrudActions.FIND_ALL, CrudActions.UPDATE}),
         })
-public class WaterUser extends AbstractJpaExpandableEntity implements ProtectedEntity, User {
+public class WaterUser extends AbstractJpaExpandableEntity implements ProtectedEntity, User, MultiTenantResource {
     public static final String DEFAULT_MANAGER_ROLE = "userManager";
     public static final String DEFAULT_VIEWER_ROLE = "userViewer";
     public static final String DEFAULT_EDITOR_ROLE = "userEditor";
@@ -238,6 +239,22 @@ public class WaterUser extends AbstractJpaExpandableEntity implements ProtectedE
     @Setter
     private Set<Role> roles;
 
+    /**
+     * Active company for the session, resolved at login. Opaque Long, transient (never persisted):
+     * it is carried on the Authenticable so the token issuer can emit the companyId claim.
+     */
+    @Transient
+    @JsonIgnore
+    private Long activeCompanyId;
+
+    /**
+     * Caller who impersonated this session (from Authenticable). Transient (never persisted): carried
+     * on the Authenticable so the token issuer can emit the impersonatedBy claim. Null for genuine logins.
+     */
+    @Transient
+    @JsonIgnore
+    private String impersonatedBy;
+
     public WaterUser(String name, String lastname, String username, String password, String salt, boolean admin, String email) {
         this(name, lastname, username, password, salt, email);
         this.admin = admin;
@@ -283,6 +300,32 @@ public class WaterUser extends AbstractJpaExpandableEntity implements ProtectedE
     @JsonIgnore
     public String getScreenNameFieldName() {
         return User.super.getScreenNameFieldName();
+    }
+
+    /**
+     * Active company resolved at login (from Authenticable). Null in single-tenant/legacy sessions.
+     */
+    @Override
+    @JsonIgnore
+    public Long getActiveCompanyId() {
+        return activeCompanyId;
+    }
+
+    public void setActiveCompanyId(Long activeCompanyId) {
+        this.activeCompanyId = activeCompanyId;
+    }
+
+    /**
+     * Caller who impersonated this session (from Authenticable). Null in genuine (non-impersonated) sessions.
+     */
+    @Override
+    @JsonIgnore
+    public String getImpersonatedBy() {
+        return impersonatedBy;
+    }
+
+    public void setImpersonatedBy(String impersonatedBy) {
+        this.impersonatedBy = impersonatedBy;
     }
 
 
