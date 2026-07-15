@@ -40,7 +40,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import java.util.UUID;
 
 /**
- * Multitenancy Tassello 3 (see multitenancy-analysis-proposal.md, section 5.4 + 9) — regression
+ * Multitenancy Tassello 3 (see the `multitenancy-knowledge` skill, section 5.4 + 9) — regression
  * tests for {@link it.water.user.service.UserAuthenticationProvider#impersonate(String, String, Long)}.
  * <p>
  * Covers:

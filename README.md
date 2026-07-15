@@ -203,7 +203,7 @@ The User module owns the tenant membership for users.
 - `WaterUser implements MultiTenantResource` (M:N, no `companyId` column); a `UserTenantMembershipResolver` (`@FrameworkComponent`) resolves the user ids belonging to a company for tenant-scoped queries.
 - `UserAuthenticationProvider` performs the login membership gate and user-level impersonation (see the Authentication module).
 
-Deferred: company-aware role assignment/resolution and granular per-entity opt-out (see `multitenancy-analysis-proposal.md`).
+Deferred: company-aware role assignment/resolution and granular per-entity opt-out (see the `multitenancy-knowledge` skill).
 
 ## Dependencies
 
