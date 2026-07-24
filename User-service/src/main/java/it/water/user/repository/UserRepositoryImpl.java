@@ -12,7 +12,9 @@ import it.water.core.permission.exceptions.UnauthorizedException;
 import it.water.repository.entity.model.exceptions.NoResultException;
 import it.water.repository.jpa.WaterJpaRepositoryImpl;
 import it.water.user.api.UserRepository;
+import it.water.user.api.UserCompanyRepository;
 import it.water.user.api.options.UserOptions;
+import it.water.user.model.UserCompany;
 import it.water.user.model.WaterUser;
 import lombok.Setter;
 import org.slf4j.Logger;
@@ -37,6 +39,9 @@ public class UserRepositoryImpl extends WaterJpaRepositoryImpl<WaterUser> implem
     @Inject
     @Setter
     private UserOptions userOptions;
+    @Inject
+    @Setter
+    private UserCompanyRepository userCompanyRepository;
 
     public UserRepositoryImpl() {
         super(WaterUser.class, USER_PERSISTENCE_UNIT);
@@ -178,6 +183,16 @@ public class UserRepositoryImpl extends WaterJpaRepositoryImpl<WaterUser> implem
         //On persist password is plain, before saving with hash it
         processUserPassword(entity, entity.getPassword(), entity.getSalt().getBytes(StandardCharsets.UTF_8));
         return super.persist(entity);
+    }
+
+    @Override
+    public WaterUser persistWithCompany(WaterUser entity, long companyId, boolean primary) {
+        processUserPassword(entity, entity.getPassword(), entity.getSalt().getBytes(StandardCharsets.UTF_8));
+        return super.persist(entity, () -> {
+            UserCompany membership = new UserCompany(entity.getId(), companyId);
+            membership.setPrimary(primary);
+            userCompanyRepository.persist(membership);
+        });
     }
 
     @Override

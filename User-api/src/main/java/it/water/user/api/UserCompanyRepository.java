@@ -39,4 +39,10 @@ public interface UserCompanyRepository extends BaseRepository<UserCompany> {
      * Used by the tenant enforcement seam (TenantMembershipResolver) to scope M:N tenant queries.
      */
     List<Long> findUserIdsByCompany(long companyId);
+
+    /**
+     * @param companyId opaque company id
+     * @return users whose primary membership points to the given company
+     */
+    List<Long> findPrimaryUserIdsByCompany(long companyId);
 }

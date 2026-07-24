@@ -69,4 +69,16 @@ public class UserCompanyRepositoryImpl extends WaterJpaRepositoryImpl<UserCompan
                 .distinct()
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<Long> findPrimaryUserIdsByCompany(long companyId) {
+        QueryBuilder qb = this.getQueryBuilderInstance();
+        Query q = qb.field(COMPANY_ID_FIELD).equalTo(companyId)
+                .and(qb.field(PRIMARY_FIELD).equalTo(true));
+        PaginableResult<UserCompany> result = this.findAll(-1, -1, q, null);
+        return result.getResults().stream()
+                .map(UserCompany::getUserId)
+                .distinct()
+                .collect(Collectors.toList());
+    }
 }

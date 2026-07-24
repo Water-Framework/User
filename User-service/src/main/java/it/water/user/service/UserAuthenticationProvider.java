@@ -4,7 +4,7 @@ import it.water.core.api.action.Action;
 import it.water.core.api.action.ActionList;
 import it.water.core.api.action.ActionsManager;
 import it.water.core.api.permission.PermissionManager;
-import it.water.core.api.role.RoleManager;
+import it.water.core.api.service.integration.RoleIntegrationClient;
 import it.water.core.api.security.Authenticable;
 import it.water.core.api.security.AuthenticationProvider;
 import it.water.core.api.security.PasswordHashService;
@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 @FrameworkComponent(services = AuthenticationProvider.class)
@@ -42,7 +43,7 @@ public class UserAuthenticationProvider implements AuthenticationProvider {
 
     @Inject
     @Setter
-    private RoleManager roleManager;
+    private RoleIntegrationClient roleIntegrationClient;
 
     //Membership lookups for the multi-tenant login gate. SystemApi bypasses permissions: this is
     //trusted internal code running as part of credential validation, never serving an external request.
@@ -109,9 +110,9 @@ public class UserAuthenticationProvider implements AuthenticationProvider {
             }
         }
 
-        if (roleManager != null) {
+        if (roleIntegrationClient != null) {
             //loading roles in order to setup authenticable correctly
-            u.setRoles(roleManager.getUserRoles(u.getId()));
+            u.setRoles(new HashSet<>(roleIntegrationClient.fetchUserRoles(u.getId())));
         } else {
             u.setRoles(Collections.emptySet());
         }
@@ -184,8 +185,8 @@ public class UserAuthenticationProvider implements AuthenticationProvider {
         target.setActiveCompanyId(resolveImpersonatedCompany(target, companyId));
 
         //4. load the target's roles exactly as the 2-arg login does
-        if (roleManager != null)
-            target.setRoles(roleManager.getUserRoles(target.getId()));
+        if (roleIntegrationClient != null)
+            target.setRoles(new HashSet<>(roleIntegrationClient.fetchUserRoles(target.getId())));
         else
             target.setRoles(Collections.emptySet());
 
