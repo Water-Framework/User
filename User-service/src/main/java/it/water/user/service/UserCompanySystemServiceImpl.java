@@ -52,4 +52,9 @@ public class UserCompanySystemServiceImpl extends BaseEntitySystemServiceImpl<Us
         return repository.findUserIdsByCompany(companyId);
     }
 
+    @Override
+    public List<Long> findPrimaryUserIdsByCompany(long companyId) {
+        return repository.findPrimaryUserIdsByCompany(companyId);
+    }
+
 }

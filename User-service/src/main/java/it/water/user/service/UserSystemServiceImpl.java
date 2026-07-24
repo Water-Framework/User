@@ -174,6 +174,29 @@ public class UserSystemServiceImpl extends BaseEntitySystemServiceImpl<WaterUser
     }
 
     @Override
+    public WaterUser createUserForCompany(String name, String lastname, String username, String email,
+                                          String password, long companyId, boolean primary, boolean active) {
+        if (companyId <= 0) {
+            throw new ValidationException(Collections.singletonList(
+                    new ValidationError("Company is required", "companyId", "-")));
+        }
+
+        byte[] salt = encryptionUtil.generate16BytesSalt();
+        String saltString = Base64.getEncoder().encodeToString(salt);
+        WaterUser user = new WaterUser(
+                name,
+                lastname,
+                username,
+                password,
+                saltString,
+                false,
+                email);
+        user.setActive(active);
+        validate(user);
+        return repository.persistWithCompany(user, companyId, primary);
+    }
+
+    @Override
     public User addUser(String username, String name, String lastname, String email, String password, String salt, boolean isAdmin) {
         WaterUser newUser = new WaterUser(name, lastname, username, password, salt, isAdmin, email);
         return this.save(newUser);

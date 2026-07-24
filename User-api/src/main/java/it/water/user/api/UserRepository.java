@@ -87,4 +87,9 @@ public interface UserRepository extends WaterJpaRepository<WaterUser> {
      */
     WaterUser updatePasswordHashVerbatim(long id, String phcPassword);
 
+    /**
+     * Persists the user and its first company membership in the same repository transaction.
+     */
+    WaterUser persistWithCompany(WaterUser user, long companyId, boolean primary);
+
 }

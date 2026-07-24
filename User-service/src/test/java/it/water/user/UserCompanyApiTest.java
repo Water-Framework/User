@@ -85,6 +85,8 @@ class UserCompanyApiTest implements Service {
         Assertions.assertFalse(this.userCompanyRepository.existsByUserAndCompany(1L, 999L));
         Assertions.assertEquals(100L, this.userCompanyRepository.findPrimaryCompanyId(1L).longValue());
         Assertions.assertTrue(this.userCompanyRepository.findCompanyIdsByUser(1L).contains(100L));
+        Assertions.assertTrue(this.userCompanyRepository.findUserIdsByCompany(100L).contains(1L));
+        Assertions.assertTrue(this.userCompanyRepository.findPrimaryUserIdsByCompany(100L).contains(1L));
     }
 
     @Test

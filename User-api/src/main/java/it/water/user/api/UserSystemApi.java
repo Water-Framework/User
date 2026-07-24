@@ -93,4 +93,10 @@ public interface UserSystemApi extends BaseEntitySystemApi<WaterUser> {
      * @return
      */
     WaterUser changePassword(WaterUser user, String password, String passwordConfirm);
+
+    /**
+     * Creates an active/inactive user and its first company membership atomically.
+     */
+    WaterUser createUserForCompany(String name, String lastname, String username, String email,
+                                   String password, long companyId, boolean primary, boolean active);
 }

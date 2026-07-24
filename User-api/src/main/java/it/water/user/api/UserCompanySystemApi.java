@@ -39,4 +39,10 @@ public interface UserCompanySystemApi extends BaseEntitySystemApi<UserCompany> {
      * Internal use (tenant enforcement seam).
      */
     List<Long> findUserIdsByCompany(long companyId);
+
+    /**
+     * @param companyId opaque company id
+     * @return users whose primary membership points to the given company
+     */
+    List<Long> findPrimaryUserIdsByCompany(long companyId);
 }
