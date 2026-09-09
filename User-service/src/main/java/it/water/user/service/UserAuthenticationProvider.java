@@ -196,6 +196,44 @@ public class UserAuthenticationProvider implements AuthenticationProvider {
     }
 
     /**
+     * Scopes an already-authenticated admin's own session into a specific company: only
+     * {@code activeCompanyId} changes, the identity stays the caller's. Hard-restricted to admin
+     * callers: a non-admin granted this would be able to scope into ANY company at will, since
+     * (deliberately) there is no membership check here — an admin is not expected to hold a
+     * UserCompany membership row for the companies it needs to inspect.
+     *
+     * @param callerUsername username of the authenticated admin requesting the company switch
+     * @param companyId      the company to scope into (trusted as-is; a non-existent id just yields
+     *                       empty results downstream, it is not validated here)
+     * @return the caller's own WaterUser with active company + roles resolved
+     */
+    @Override
+    public Authenticable assumeCompany(String callerUsername, Long companyId) {
+        //1. load the caller itself (same identity as the token already presented; no password check —
+        //   the caller is already authenticated, this is not a login)
+        WaterUser caller = userSystemApi.findByUsername(callerUsername);
+        if (caller == null || !caller.isActive() || caller.isDeleted())
+            throw new UnauthorizedException(WRONG_USER_OR_PWD_MESSAGE);
+
+        //2. admin-only gate: no membership check follows, so this must never be reachable for a
+        //   non-admin caller
+        if (!caller.isAdmin())
+            throw new UnauthorizedException(WRONG_USER_OR_PWD_MESSAGE);
+
+        //3. trust the admin's choice unconditionally: no membership check, no existence check
+        caller.setActiveCompanyId(companyId);
+
+        //4. load the caller's own roles exactly as every other token-minting path does (generateToken
+        //   iterates getRoles() unconditionally, so this must never be left null)
+        if (roleIntegrationClient != null)
+            caller.setRoles(new HashSet<>(roleIntegrationClient.fetchUserRoles(caller.getId())));
+        else
+            caller.setRoles(Collections.emptySet());
+
+        return caller;
+    }
+
+    /**
      * Resolves the IMPERSONATE Action registered for WaterUser via the ActionsManager, or null if
      * it is not available (e.g. actions not yet registered).
      */
