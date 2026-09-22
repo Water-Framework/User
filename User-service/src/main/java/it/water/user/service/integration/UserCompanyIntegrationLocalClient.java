@@ -1,13 +1,16 @@
 package it.water.user.service.integration;
 
 import it.water.core.api.model.User;
+import it.water.core.api.repository.query.Query;
 import it.water.core.api.service.integration.UserCompanyIntegrationClient;
 import it.water.core.interceptors.annotations.FrameworkComponent;
 import it.water.core.interceptors.annotations.Inject;
 import it.water.user.api.UserCompanySystemApi;
 import it.water.user.api.UserSystemApi;
+import it.water.user.model.UserCompany;
 import lombok.Setter;
 
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -54,5 +57,14 @@ public class UserCompanyIntegrationLocalClient implements UserCompanyIntegration
     @Override
     public List<Long> findPrimaryUserIdsByCompany(long companyId) {
         return userCompanySystemApi.findPrimaryUserIdsByCompany(companyId);
+    }
+
+    @Override
+    public void removeMembershipsByCompany(long companyId) {
+        Query query = userCompanySystemApi.getQueryBuilderInstance()
+                .field("companyId").equalTo(companyId);
+        userCompanySystemApi.findAll(query, -1, 1, null).getResults().stream()
+                .sorted(Comparator.comparingLong(UserCompany::getId))
+                .forEach(membership -> userCompanySystemApi.remove(membership.getId()));
     }
 }
